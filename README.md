@@ -1,1 +1,1 @@
-# clinic_database_design
+# Clinic Database Design
