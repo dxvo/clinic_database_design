@@ -1,5 +1,4 @@
 import os
-
 import pandas as pd
 import numpy as np
 
@@ -18,7 +17,7 @@ app = Flask(__name__)
 # Database Setup
 #################################################
 
-app.config["CLEARDB_DATABASE_URL"] = "mysql://b240f7d100648c:db4a4797@us-cdbr-iron-east-03.cleardb.net/heroku_76070ac0daeb317?reconnect=true"
+app.config["CLEARDB_DATABASE_URL"] =  ""
 db = SQLAlchemy(app)
 
 # reflect an existing database into a new model
@@ -34,7 +33,7 @@ Base.prepare(db.engine, reflect=True)
 @app.route("/")
 def index():
     """Return the homepage."""
-    return 'Hello World'
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
