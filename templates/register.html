@@ -8,11 +8,11 @@
   </head>
   <body>
     <header>
-      <a href="/homepage/">Home</a>
-      <h1>Register Your Account</h1>
+        <div> <a href="index.html">Home</a></div>
     </header>
+
     <div class="Sign_up">
-      <h1>Fill out the Form</h1>
+      <h1 style="text-align: center">Registration Form</h1>
       <form>
         <p class="accountid">UserName(required):
           <input id = "username" type="text" name="" placeholder="Enter UserName">
@@ -28,33 +28,33 @@
           </p>
         </p>
 
-        <p class="name">First Name(required):
-            <input id="first_name" type="text" name="" placeholder = "Type here">
-            <nobr>Last Name(required):
-                <input id = "last_name" type ="text" name ="" placeholder = "Type here">
+        <p class="name">First Name:
+            <input id="first_name" type="text" name="" placeholder = "First Name">
+            <nobr>Last Name:
+                <input id = "last_name" type ="text" name ="" placeholder = "Last Name">
             </nobr>
-            <nobr>Middle Name Initial:
-                    <input id = "middle_name" type ="text" name ="" placeholder = "Type here">
+            <nobr>Middle Initial:
+                    <input id = "middle_name" type ="text" name ="" placeholder = "Initial">
             </nobr>
-        </p>  
+        </p>
 
         <p class = "basicinfo">Sex:
             <select>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
             </select>
-              Date of Birth(required):
+              Date of Birth:
               <input class="dob_input" id="dob" type="date" min="1900-01-01" max="2019-01-01">
         </p>
         
-        <p class = "address">Street Number(required):
+        <p class = "address">Street Number:
             <input id = "street_number" type ="text" name ="" placeholder = "Type here">
-                Street Name(required):
+                Street Name:
                         <input id = "street_name" type ="text" name ="" placeholder = "Type here">
                 Apartment Number:
                         <input id = "apart_number" type ="text" name ="" placeholder = "Type here">
         </p>
-        <p class = "city">City(required):
+        <p class = "city">City:
             <input id = "City" type ="text" name ="" placeholder = "Type here">
             States(required):
                 <select>
@@ -110,11 +110,11 @@
                         <option value="WI">Wisconsin</option>
                         <option value="WY">Wyoming</option>
                 </select>
-                Zipcode(5-digit required)
+                Zipcode
                 <input id = "zipcode" type ="text" name ="" placeholder = "Type here">
         </p>
         <p class ="other_info">
-            Phone Number(required)
+            Phone Number
             <input id = "phone_number" type="text" name="" placeholder="Type here">
           Ethinicity
           <select>
@@ -129,8 +129,8 @@
         </p>
 
         <div class = "submit">
-          <input type="submit" name="" value="Submit" onclick=add_account()>
-          <input type="submit" name="" value="Cancel" formaction="/homepage/">
+          <input style = "font-weight:bold" type="submit" name="" value="Submit" onclick=add_account()>
+          <input style = "font-weight:bold" type="submit" name="" value="Cancel" formaction="index.html">
         </div>
       </form>
      
