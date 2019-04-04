@@ -29,12 +29,21 @@ Base.prepare(db.engine, reflect=True)
 # Samples_Metadata = Base.classes.sample_metadata
 # Samples = Base.classes.samples
 
+@app.route('/')
+@app.route('/homepage/')
+def homepage():
+    return render_template('homepage.html')
 
-@app.route("/")
-def index():
-    """Return the homepage."""
-    return render_template("index.html")
+@app.route('/register/')
+def registerpage():
+    return render_template('register.html')
 
+@app.route('/patient_reg/')
+def patient_reg():
+    return render_template('patient_reg.html')
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 if __name__ == "__main__":
     app.run()

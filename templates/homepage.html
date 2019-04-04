@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Medical Center Design</title>
+    <link rel="stylesheet" href ="../static/css/homepage_design.css">
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to Medical Clinic</h1>
+    </header>
+    <div class="Sign_in" style = "padding-bottom: 10px;" >
+      <h1>Please Sign in</h1>
+      <form>
+        <p>UserName:</p>
+        <input id = "username" type="text" name="user" placeholder="Enter UserName">
+        <p>Password:</p>
+        <input id = "password" type="password" name="pass" placeholder="Enter Password">
+        <p1>I am a...
+            <select>
+              <option value="patient">Patient</option>
+              <option value = "doctor">Doctor</option>
+              <option value="staff">Staff</option>
+            </select>
+        </p1>
+        <input type="submit" name="" value="Login" onclick = get_account()>
+        <input type="submit" name="" value="Register" formaction="/register/">
+      </form>
+     
+    </div>
+  </body>
+</html>
