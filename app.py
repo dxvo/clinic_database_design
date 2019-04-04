@@ -32,7 +32,7 @@ Base.prepare(db.engine, reflect=True)
 @app.route('/')
 @app.route('/homepage/')
 def homepage():
-    return render_template('login.html')
+    return render_template('index.html')
 
 @app.route('/register/')
 def registerpage():
