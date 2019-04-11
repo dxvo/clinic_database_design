@@ -28,16 +28,29 @@ def staff_reg(st_username):
     if form.validate_on_submit():
         office_loc = form.officelocation.data
         work_date = form.work_date.data
-        #print (office_loc)
-        #print(work_date)
         registerform.insert_staff(st_username, office_loc, work_date)
         flash(f'Account is Registerd, Please Log in!', 'success')
         return redirect(url_for('home'))
     return render_template('staff_reg.html', form = form)
 
+
+'''
+AFTTER LOG IN VIEWS FOR PATIENT, DOCTOR AND STAFF 
+ '''
+
 @app.route("/After_Login_Patient", methods=['GET', 'POST'])
 def After_Login_Patient():
     return render_template('After_Login_Patient.html')
+
+@app.route("/After_Login_Doctor", methods=['GET', 'POST'])
+def After_Login_Doctor():
+    return render_template('After_Login_Patient.html')
+
+@app.route("/After_Login_Staff", methods=['GET', 'POST'])
+def After_Login_Staff():
+    return render_template('After_Login_Patient.html')
+
+
 
 @app.route("/register", methods=['GET', 'POST'])
 def register():
@@ -99,7 +112,6 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
-
 @app.route("/login", methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -110,22 +122,28 @@ def login():
             if login_check.account_type(username, password) == "patient":
                 flash('You Successfully Log in')
                 return redirect(url_for('After_Login_Patient'))
+
             elif login_check.account_type(username, password) == "doctor":
                 flash('You Successfully Log in')
-                return render_template('doctor.html')
-            elif login_check.account_type(username, password) == "patient":
+                return redirect(url_for('After_Login_Doctor'))
+
+            elif login_check.account_type(username, password) == "staff":
                 flash('You Successfully Log in')
-                return render_template('staff.html')
+                return redirect(url_for('After_Login_Staff'))
         else:
             flash('Invalid Account, Check Your Username and Password', 'danger')
 
     return render_template('login.html', title='Login', form=form)
 
-
+#----------------------------------
 @app.route("/appointment", methods=['GET', 'POST'])
 def appointment():
     return render_template('appointment.html',title="Appointment")
 
+@app.route("/manage_account", methods=['GET', 'POST'])
+def manage_account():
+    return render_template('manage_account.html',title="Manage Account")
+
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
