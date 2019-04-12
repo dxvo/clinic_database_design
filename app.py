@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for, flash, redirect
-from forms import RegistrationForm, LoginForm, StaffForm, DoctorForm, AddLoc
+from forms import RegistrationForm, LoginForm, StaffForm
 
 import pymysql
 import appointment
@@ -34,6 +34,7 @@ def staff_reg(st_username):
         flash(f'Account is Registerd, Please Log in!', 'success')
         return redirect(url_for('home'))
     return render_template('staff_reg.html', form = form)
+
 
 @app.route("/register/doc_reg/<dr_username>/add_loc", methods = ['GET','POST'])
 def add_loc(dr_username):
@@ -89,6 +90,24 @@ def doc_reg(dr_username):
             return redirect(url_for('add_loc',dr_username = dr_username))
     return render_template('doc_reg.html', form = form)
 
+'''
+AFTTER LOG IN VIEWS FOR PATIENT, DOCTOR AND STAFF 
+ '''
+
+@app.route("/After_Login_Patient", methods=['GET', 'POST'])
+def After_Login_Patient():
+    return render_template('After_Login_Patient.html')
+
+@app.route("/After_Login_Doctor", methods=['GET', 'POST'])
+def After_Login_Doctor():
+    return render_template('After_Login_Patient.html')
+
+@app.route("/After_Login_Staff", methods=['GET', 'POST'])
+def After_Login_Staff():
+    return render_template('After_Login_Patient.html')
+
+
+
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -131,11 +150,11 @@ def register():
 
         #print(username, password, fname, lname, mname,dob,streetnum, streetname, aptnum, city, state, zipcode, email, phonenum, sex, ethnicity)
         if dob <= "1900-01-01":
-            flash(f"Date of Birth Should be greater than 1900-01-01", 'danger')
+            flash(f"Date of Birth Should be greater than 1900-01-01")
         elif registerform.email_check(email) == False:
-            flash(f"{username} is already TAKEN, Please use another", 'danger')
+            flash(f"{username} is already TAKEN, Please use another")
         elif registerform.user_check(email) == False:
-            flash(f"{email} is already TAKEN, Please use another", 'danger')
+            flash(f"{email} is already TAKEN, Please use another")
         else:
             registerform.insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetname, aptnum, city, state, zipcode, email, phonenum, sex, ethnicity)
             if (iam == "ST"):
@@ -145,10 +164,8 @@ def register():
             elif (iam == "PA"):
                 return redirect(url_for('patient_reg'))
             elif (iam == "DR"):
-                #print("dr_name: " + username)
-                return redirect(url_for('doc_reg', dr_username = username))
+                return redirect(url_for('doc_reg'))
     return render_template('register.html', title='Register', form=form)
-
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -160,17 +177,28 @@ def login():
         if login_check.login_check(username, password) == True:
             if login_check.account_type(username, password) == "patient":
                 flash('You Successfully Log in')
-                return render_template('patient.html')
+                return redirect(url_for('After_Login_Patient'))
+
             elif login_check.account_type(username, password) == "doctor":
                 flash('You Successfully Log in')
-                return render_template('doctor.html')
-            elif login_check.account_type(username, password) == "patient":
+                return redirect(url_for('After_Login_Doctor'))
+
+            elif login_check.account_type(username, password) == "staff":
                 flash('You Successfully Log in')
-                return render_template('staff.html')
+                return redirect(url_for('After_Login_Staff'))
         else:
             flash('Invalid Account, Check Your Username and Password', 'danger')
 
     return render_template('login.html', title='Login', form=form)
+
+#----------------------------------
+@app.route("/appointment", methods=['GET', 'POST'])
+def appointment():
+    return render_template('appointment.html',title="Appointment")
+
+@app.route("/manage_account", methods=['GET', 'POST'])
+def manage_account():
+    return render_template('manage_account.html',title="Manage Account")
 
 
 if __name__ == '__main__':

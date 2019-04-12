@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField, RadioField
+from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField
 from wtforms.validators import DataRequired,Length,Email,EqualTo,NumberRange,Optional
 from wtforms.widgets import PasswordInput, CheckboxInput, ListWidget
 from QueryEngine import QueryEngine
@@ -8,8 +8,8 @@ qe = QueryEngine()
 qe.setup_default()
 
 class MultiCheckboxField(SelectMultipleField):
-    widget          = widgets.ListWidget(prefix_label=False)
-    option_widget   = widgets.CheckboxInput()
+	widget			= widgets.ListWidget(prefix_label=False)
+	option_widget	= widgets.CheckboxInput()
 
 class LoginForm(FlaskForm):
     user = StringField('Username',
@@ -53,7 +53,7 @@ class RegistrationForm(FlaskForm):
 
     zipcode = IntegerField('Zip code',validators=[DataRequired()])
     phonenumber = StringField('Phone Number',validators=[DataRequired(),Length(min = 10, max = 10)],
-        render_kw={"placeholder": "1234567890"})
+        render_kw={"placeholder": "8328379876"})
     sex = SelectField('Sex', choices=[('',''),('male','Male'),('female','Female')],validators=[DataRequired(),Length(min = 1)])
     ethnicity =  SelectField('Ethnicity',
         choices=[('',''),('W','White'),('AA','African American'),('AI','Asian'),
@@ -81,42 +81,65 @@ class StaffForm(FlaskForm):
         elem = elem[0]
         loc.append(elem)
     #print(loc)
-    officelocation = SelectField('Working Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    officelocation = SelectField('Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
     work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
     submit = SubmitField('Create')
 
 class DoctorForm(FlaskForm):
     query_strings = ("Select Office_Name from office")
     qe.connect()
-    option_loc = qe.do_query(query_strings)
+    option_locs = qe.do_query(query_strings)
     qe.disconnect
-    loc = []   
-    for elem in option_loc:
+    locs = []   
+    for elem in option_locs
         elem = elem[0]
         loc.append(elem)
-    officelocation = SelectField('Working Office Location', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    officelocation = MultiCheckboxField('Office Location', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
     work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
-    specialization = SelectField('Specilalization', choices = [('Allergy and Immunology','Allergy and Immunology'),  ('Ansethesiology','Ansethesiology'), ('Dermatology','Dermatology'), 
+       specialization = SelectField('Specilalization', choices = [('Allergy and Immunology','Allergy and Immunology'),  ('Ansethesiology','Ansethesiology'), ('Dermatology','Dermatology'), 
     ('Diagonostic Radiology','Diagonostic Radiology'), ('Emergency Medicine','Emergency Medicine'), ('Family Medicine','Family Medicine'), ('General Medicine', 'General Medicine'),
      ('Internal Medicine','Internal Medicine'), ('Medical Genetics','Medical Genetics'), ('Neurology','Neurology'), 
     ('Nuclear Medicine','Nuclear Medicine'), ('Obstetrics and Gynecology','Obstetrics and Gynecology'), ('Ophthalmology','Ophthalmology'), 
     ('Pathology','Pathology'), ('Pediatrics','Pediatrics'), ('Physical Medicine and Rehabili','Physical Medicine and Rehabili'), ('Preventive Medicine','Preventive Medicine'), 
     ('Psychiatry','Psychiatry'), ('Radiation Oncology','Radiation Oncology'), ('Sugery','Sugery'), ('Urology','Urology')], validators=[DataRequired()])
     submit = SubmitField('Create') 
-    add_loc = SubmitField('Add Office')
 
-class AddLoc(FlaskForm):
-    query_strings = ("Select Office_Name from office")
+class PatientForm(FlaskForm):
+    #Primary Phyiscan, Office Location
+    insurancename = StringField('FirstName',validators=[DataRequired(),Length(min = 1,max = 15)])
+    phonenumber = StringField('Phone Number',validators=[DataRequired(),Length(min = 10, max = 10)])
+    deductible = IntegerField('Zip code',validators=[DataRequired()])
+    expiration = StringField('expiration',validators=[DataRequired(),Length(min = 7,max = 7)],
+        render_kw={"placeholder": "yyyy-mm"})
+    query_string = ("Select Office_Name from office")
     qe.connect()
-    option_loc = qe.do_query(query_strings)
-    qe.disconnect
-    loc = []   
+    option_loc = qe.do_query(query_string)
+    qe.disconnect()
+    loc = []
     for elem in option_loc:
         elem = elem[0]
         loc.append(elem)
-    officelocation = SelectField('Working Office Location', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
-    work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
-    submit = SubmitField('Create') 
-    add_loc = SubmitField('Add Office')
-    cancel = SubmitField("Cancel")
+    #print(loc)
+    officelocation = SelectField('Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    query_string = ("Select Last_Name from general_info as gi, doctor_office, doctor as d, office as o where o.Office_Name = {officelocation}, ND d.Doctor_ID = gi.Hospital_ID  AND doctor_office.Office_ID=o.Office_IDAND d.Doctor_ID = doctor_office.Doctor_ID")
+    qe.connect()
+    option_loc = qe.do_query(query_string)
+    qe.disconnect()
+    loc = []
+    for elem in option_loc:
+        elem = elem[0]
+        loc.append(elem)
+    PrimaryDoctor = SelectField('Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+
+
+
+      
+
+
+
+
+
+
+
+
 
