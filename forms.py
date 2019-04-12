@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField
+from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField, RadioField
 from wtforms.validators import DataRequired,Length,Email,EqualTo,NumberRange,Optional
 from wtforms.widgets import PasswordInput, CheckboxInput, ListWidget
 from QueryEngine import QueryEngine
@@ -81,10 +81,42 @@ class StaffForm(FlaskForm):
         elem = elem[0]
         loc.append(elem)
     #print(loc)
-    officelocation = SelectField('Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    officelocation = SelectField('Working Office Location',choices = [(l, l) for l in loc] ,validators=[DataRequired()])
     work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
     submit = SubmitField('Create')
 
+class DoctorForm(FlaskForm):
+    query_strings = ("Select Office_Name from office")
+    qe.connect()
+    option_loc = qe.do_query(query_strings)
+    qe.disconnect
+    loc = []   
+    for elem in option_loc:
+        elem = elem[0]
+        loc.append(elem)
+    officelocation = SelectField('Working Office Location', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
+    specialization = SelectField('Specilalization', choices = [('Allergy and Immunology','Allergy and Immunology'),  ('Ansethesiology','Ansethesiology'), ('Dermatology','Dermatology'), 
+    ('Diagonostic Radiology','Diagonostic Radiology'), ('Emergency Medicine','Emergency Medicine'), ('Family Medicine','Family Medicine'), ('General Medicine', 'General Medicine'),
+     ('Internal Medicine','Internal Medicine'), ('Medical Genetics','Medical Genetics'), ('Neurology','Neurology'), 
+    ('Nuclear Medicine','Nuclear Medicine'), ('Obstetrics and Gynecology','Obstetrics and Gynecology'), ('Ophthalmology','Ophthalmology'), 
+    ('Pathology','Pathology'), ('Pediatrics','Pediatrics'), ('Physical Medicine and Rehabili','Physical Medicine and Rehabili'), ('Preventive Medicine','Preventive Medicine'), 
+    ('Psychiatry','Psychiatry'), ('Radiation Oncology','Radiation Oncology'), ('Sugery','Sugery'), ('Urology','Urology')], validators=[DataRequired()])
+    submit = SubmitField('Create') 
+    add_loc = SubmitField('Add Office')
 
-
+class AddLoc(FlaskForm):
+    query_strings = ("Select Office_Name from office")
+    qe.connect()
+    option_loc = qe.do_query(query_strings)
+    qe.disconnect
+    loc = []   
+    for elem in option_loc:
+        elem = elem[0]
+        loc.append(elem)
+    officelocation = SelectField('Working Office Location', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
+    work_date = MultiCheckboxField('Working Date', choices= [('M', 'Monday'),('Tu','Tuesday'),('W', 'Wednesday'),('Th','Thursday'),('F','Friday'),('Sa','Saturday'),('Su','Sunday')], validators=[DataRequired()])
+    submit = SubmitField('Create') 
+    add_loc = SubmitField('Add Office')
+    cancel = SubmitField("Cancel")
 

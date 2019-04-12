@@ -12,10 +12,10 @@ def user_check(username):
   qe.disconnect()
   count = check_exist[0][0]
   if count == 1:
-    print("Username is already taken, pls use another one")
+    #print("Username is already taken, pls use another one")
     return False
   else:
-    print("Good username")
+    #print("Good username")
     return True 
 
 def email_check(email):
@@ -24,10 +24,10 @@ def email_check(email):
     qe.disconnect()
     count = check_exist[0][0]
     if count == 1:
-        print("Email is already taken, pls use another")
+        #print("Email is already taken, pls use another")
         return False
     else:
-        print("Good email")
+        #print("Good email")
         return True
 
 
@@ -36,7 +36,7 @@ def insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetna
     state = qe.do_query("select State_ID from state where State_code = '" + state + "'")
     qe.disconnect()
     state_id = state[0][0]
-    print(state_id)
+    #print(state_id)
     if mname == None:
       mname = 'NULL'
     else:
@@ -69,24 +69,111 @@ def insert_staff(username, office_loc, work_date):
     hos_id = qe.do_query(query_string)
     qe.disconnect()
     hos_id = hos_id[0][0]
-    print(hos_id)
+    #print(hos_id)
     query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
     qe.connect()
     office_id = qe.do_query(query_string)
     qe.disconnect()
     office_id = office_id[0][0]
-    print(office_id)
+    #print(office_id)
     staff_date = ""
     for d in work_date:
       staff_date = staff_date + d
-    print(staff_date)
+    #print(staff_date)
     insert_string = (f"INSERT INTO STAFF(Staff_ID, Office_Location_ID,Employed_Since,Working_date) VALUE({hos_id},{office_id},CURDATE(),'{staff_date}')")
-    print(insert_string)
+    #print(insert_string)
     qe.connect()
     qe.do_query(insert_string)
     qe.commit()
     qe.disconnect()
 
+def insert_doc(username,office_loc, work_date, spec):
+    query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+    qe.connect()
+    hos_id = qe.do_query(query_string)
+    qe.disconnect()
+    hos_id = hos_id[0][0]
 
+    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
+    qe.connect()
+    office_id = qe.do_query(query_string)
+    qe.disconnect()
+    office_id = office_id[0][0]
 
+    query_string = (f"SELECT Specialization_ID FROM SPECIALIZATION WHERE Type = '{spec}'")
+    qe.connect()
+    spec_id = qe.do_query(query_string)
+    qe.disconnect()
+    spec_id = spec_id[0][0]
 
+    #print(hos_id," ",spec_id, " ",office_id)
+    dr_date = ""
+    for d in work_date:
+      dr_date = dr_date + d
+    
+    insert_string = (f"INSERT INTO DOCTOR(Doctor_ID, Specialization_ID, Employed_Since) VALUE({hos_id},{spec_id},CURDATE())")
+    #print(insert_string)
+    qe.connect()
+    qe.do_query(insert_string)
+    qe.commit()
+    qe.disconnect()
+
+    insert_string = (f"INSERT INTO DOCTOR_OFFICE(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
+    qe.connect()
+    qe.do_query(insert_string)
+    qe.commit()
+    qe.disconnect()
+
+def add_loc(username, office_loc, work_date):
+    office_choice = True
+    work_date_choice = True
+
+    query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+    qe.connect()
+    hos_id = qe.do_query(query_string)
+    qe.disconnect()
+    hos_id = hos_id[0][0]
+
+    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
+    qe.connect()
+    office_id = qe.do_query(query_string)
+    qe.disconnect()
+    office_id = office_id[0][0]
+
+    query_string = (f"SELECT count(*) from DOCTOR_OFFICE Where Office_ID = {office_id} AND Doctor_ID = {hos_id} AND End_Date is NULL")
+    qe.connect()
+    exist = qe.do_query(query_string)
+    qe.disconnect()
+    
+
+    if exist == 1:
+      office_choice = False
+      return office_choice, work_date_choice
+    
+    query_string = (f"SELECT Working_date from DOCTOR_OFFICE WHERE Doctor_ID = {hos_id} AND End_Date is NULL")
+    qe.connect()
+    exist_workdate = qe.do_query(query_string)
+    qe.disconnect()
+    
+    date_exist = []
+    for d in exist_workdate:
+      d = d[0]
+      date_exist.append(d)
+
+    for el in work_date:
+      for d in date_exist:
+        if (d.find(f'{el}') != -1):
+          work_date_choice = False
+          return office_choice, work_date_choice
+    
+    dr_date = ""
+    for d in work_date:
+      dr_date = dr_date + d
+
+    insert_string = (f"INSERT INTO DOCTOR_OFFICE(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
+    qe.connect()
+    qe.do_query(insert_string)
+    qe.commit()
+    qe.disconnect()
+
+    return office_choice, work_date_choice
