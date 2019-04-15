@@ -659,7 +659,6 @@ def doc_today_appointment(dt_username):
 
     result = qe.do_query(query_string)
     qe.disconnect()
-    print(result)
 
     data = []
     for i in result:
