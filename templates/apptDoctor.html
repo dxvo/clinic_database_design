@@ -22,50 +22,52 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-
-              <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="{{url_for('home')}}">Make Appointment</a>
-                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
-                    </div>
-              </li>
-
-              <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Prescription</strong></a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="{{url_for('home')}}">Request Prescription</a>
-                    <a class="dropdown-item" href="{{url_for('home')}}">View Past Prescription </a>
-                    </div>
-              </li>
-
+              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Make Apppintment</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Manage Apppintments</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('patientPrescription', pt_username = pt_username) }}"><strong>Request Prescription</strong></a>
             </div>
-
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Log Out</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View', pt_username = pt_username) }}"><strong>Profile</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>
       </nav>
     </header>
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-md-8">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          <div class="content-section">
 
-<main role="main" class="container">
-        <div class="col-lg-5">
-    <div class="card" style="width: 60% background-color:gray;">
-      <img src="../static/Images/profile.jpg" alt="profile_imag" height="120" width="120" >
-      <div class="container" style="padding: 2px 16px;">
-        <h2>{{first_name}} {{last_name}} </h2>
-        <p class="title">Type: Patient</p>
-        <p>DOB: {{dob}}</p>
-        <p>Email: {{email}}</p>
-        <p>Phone: {{phone}}</p>
-        <p><button class="button">Edit Profile</button></p>
+          <form method="POST" action="">
+                  {{ form.hidden_tag() }}
+                  <fieldset class="form-group">
+                      <legend class="border-bottom mb-4">Make Appointment</legend>
+                      <div class="form-group">
+                      Primay Physician: {{primary}}
+                      </div>
+                 </fieldset>
+                      <div class="form-group">
+                      {{ form.submitDoctor(class="btn btn-outline-info") }}
+                      {% if approval %}
+                      {{ form.submitSpecialist(class="btn btn-outline-info") }}
+                      {% endif %}
+                      </div>
+            </form>
+        </div>
+        </div>
       </div>
-    </div>
-  </div>
-</main>
-
+    </main>
 
 
     <!-- Optional JavaScript -->

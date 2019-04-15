@@ -7,12 +7,33 @@ import appointment
 import login_check
 import registerform
 import forms
+import datetime
+
+
+from flask import jsonify
+import csv
+from flask_mail import Mail, Message
+
+
 
 qe = QueryEngine()
 qe.setup_default()
 
 app = Flask(__name__)
+
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
+
+
+mail= Mail(app)
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = "uhdatabase2019@gmail.com"
+app.config['MAIL_PASSWORD'] = "coscspring2019"
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
+
+
 
 @app.route("/")
 @app.route("/home")
@@ -264,7 +285,7 @@ def login():
         if login_check.login_check(username, password) == True:
             if login_check.account_type(username, password) == "patient":
                 flash('You Successfully Log in')
-                return render_template('Patient_View.html')
+                return redirect(url_for('Patient_View',pt_username=username))
 
             elif login_check.account_type(username, password) == "doctor":
                 flash('You Successfully Log in')
@@ -277,6 +298,29 @@ def login():
 
     return render_template('login.html', title='Login', form=form)
 
+
+
+'''
+PATIENT VIEW AFTER LOG IN 
+'''
+@app.route("/Patient_View/<pt_username>", methods=['GET', 'POST'])
+def Patient_View(pt_username):
+    qe.connect()
+    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{pt_username}';")
+
+    result = qe.do_query(query_string);
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return render_template('Patient_View.html',
+                            first_name =first_name,
+                            email = email,
+                            last_name = last_name,
+                            phone = phone, dob = dob,pt_username = pt_username)
 
 
 '''STAFF VIEW'''
@@ -293,9 +337,122 @@ def staffPage():
     qe.disconnect()
     return render_template('staffPage.html',data = numberedData)
 
+
 @app.route("/staffReports")
 def staffReports():
     return render_template('staffReports.html')
+
+
+# Route to send Email 
+@app.route("/SendEmail/<D_Fname>/<D_Email>/<P_Fname>/<P_Email>/<Type>")
+def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
+
+    #Patient 
+    msg1 = Message("Doctor Appoitment Notification", sender = "uhdatabase2019@gmail.com", recipients = [P_Email])
+
+    #Doctor 
+    msg2 = Message("Doctor Appoitment Notification", sender = "uhdatabase2019@gmail.com", recipients = [D_Email])
+
+    if (Type == "cancelled" or Type == "Cancelled"):
+        msg1.body = "Hi " + P_Fname + ", Your appointment has been successfully cancelled"
+        msg2.body = "Hi " + D_Fname + ", Patient " + P_Fname +  " has cancelled appointment"
+    else: 
+        msg1.body = "Hello Flask message sent from Flask-Mail"
+        msg2.body = "Hello Flask message sent from Flask-Mail"
+
+    mail.send(msg1)
+    mail.send(msg2)
+    return "Sent"
+
+@app.route("/cancel_Appointment/<app_id>",methods=['GET', 'POST'])
+def cancel_appointment(app_id):
+    qe.connect()
+    query_string = (f"UPDATE appointment SET Appt_Status = 'Cancelled' WHERE Appt_ID = {app_id};")
+    qe.do_query(query_string);
+    qe.commit()
+
+    #get Fname and Email
+    get_info =  (f"SELECT D.Email, D.First_Name, P.Email, P.First_Name\
+        FROM appointment AS  A,  general_info  AS P, general_info  AS D\
+        WHERE  Appt_ID  = {app_id}  AND A.With_Doctor  =  D.Hospital_ID  AND  A.Patient_ID  =  P.Hospital_ID;")
+
+    result = qe.do_query(get_info);
+    doctor_email = result[0][0]
+    doctor_fname = result[0][1]
+    patient_email = result[0][2]
+    patient_fname = result[0][3]
+
+    Type = "cancelled"
+    qe.disconnect()
+
+    return redirect(url_for('SendEmail',D_Fname = doctor_fname,D_Email = doctor_email,
+        P_Fname = patient_fname,P_Email = patient_email,Type = Type))
+
+
+'''
+APPOINTMENT ROUTE 
+'''
+@app.route("/pt_View_Current_Appointment/<pt_username>",methods=['GET', 'POST'])
+def pt_View_Current_Appointment(pt_username):
+    #BOOKED RESULT 
+    qe.connect()
+    query_string_booked = (f"SELECT App_Type,App_date,App_hour,With_Doctor,Appt_Status, Office_Name, Appt_ID \
+        FROM appointment, log_in, office \
+        WHERE log_in.UserName = '{pt_username}' \
+        AND log_in.User_ID = appointment.Patient_ID \
+        AND office.Office_ID =  appointment.App_Location_ID\
+        AND appointment.Appt_Status = 'Booked';")
+
+    booked_result = qe.do_query(query_string_booked)
+    qe.disconnect()
+
+    #COMPLETED RESULT 
+    qe.connect()
+    query_string_completed = (f"SELECT App_Type,App_date,App_hour,With_Doctor,Appt_Status, Office_Name, Appt_ID \
+        FROM appointment, log_in, office \
+        WHERE log_in.UserName = '{pt_username}' \
+        AND log_in.User_ID = appointment.Patient_ID \
+        AND office.Office_ID =  appointment.App_Location_ID\
+        AND appointment.Appt_Status <> 'Booked';")
+
+    completed_result= qe.do_query(query_string_completed)
+    qe.disconnect()
+
+    booked_data = []
+    completed_data = []
+
+    #Append list 
+    for i in booked_result:
+        booked_data.append(list(i))
+    
+    for i in completed_result:
+        completed_data.append(list(i))
+
+    for elem in booked_data:
+        print(f"current appt is {elem[6]}")
+        hour = int(elem[2])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[2] = str(hour) + ":00 " + suffix
+
+    for elem in completed_data:
+        hour = int(elem[2])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[2] = str(hour) + ":00 " + suffix
+
+
+    return render_template("pt_View_Current_Appointment.html", 
+                            booked_data = booked_data,completed_data=completed_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
