@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+    
+    <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Appointment Location</legend>
+                <div class="form-group">
+                
+                <div class = "form-group col-md-5">
+                    {{ form.select.label(class="form-control-label") }}
+                    {% if form.select.errors %}
+                        {{ form.select(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.select.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.select(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                
+                
+                </div>
+           </fieldset>
+                <div class="form-group">
+                Click Back If You Want to Repick. Click Submit to Choose this Location.
+                {{ form.back(class="btn btn-outline-info") }}
+                {{ form.submit(class="btn btn-outline-info") }}
+                </div> 
+      </form>
+  </div>
+{% endblock content %}

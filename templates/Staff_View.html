@@ -10,7 +10,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 
-    <title>Medical Clinic</title>
+    <title>Staff Profile</title>
 </head>
 <body>
     <header class="site-header">
@@ -22,36 +22,38 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Home</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('about') }}"><strong>About</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
+                <strong> View Appointment Status</strong>
+              </a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Login</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Register</strong></a>
+              <a class="nav-item nav-link" href="{{url_for('login')}}">
+                <strong>Log Out</strong>
+              </a>
+
             </div>
           </div>
         </div>
       </nav>
     </header>
-    <main role="main" class="container">
-      <div class="row">
-        <div class="col-md-8">
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endwith %}
-          {% block content %}
-          {% endblock %}
-        </div>
-      </div>
-    </main>
 
+
+<main role="main" class="container">
+  <div class="col-lg-5" style="text-align: left;">
+    <div class="card" style="width: 80%; background-color:white;">
+      <img src="../static/Images/profile.jpg" alt="profile_imag" height="120" width="120" >
+      <div class="container" style="padding: 2px 16px;">
+        <h2>{{first_name}} {{last_name}} </h2>
+        <p class="title"> Account Type: Staff</p>
+        <p>DOB: {{dob}}</p>
+        <p>Email: {{email}}</p>
+        <p>Phone: {{phone}}</p>
+        <p><button class="button">Edit Profile</button></p>
+      </div>
+    </div>
+  </div>
+</main>
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->

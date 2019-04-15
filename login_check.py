@@ -11,11 +11,9 @@ def login_check(username, password):
   qe.disconnect()
   if count == 1:
     print("I am in")
-   # flash(f'I am in')
     return True
   else:
     print("wrong account")
-    #flash(f'Account not exist')
     return False
 
 def account_type(username, password):
@@ -38,14 +36,3 @@ def get_login(username, password):
   qe.disconnect()
   print("check_acc:", check_acc[0][0])
   return check_acc[0][0]
-
-#login_check("lise_meitner","lise032978")
-
-
-#print("logins:")
-#for entry in logins:
- # print(entry)
-  
-#print("doctors:")
-#for entry in doctors:
-#  print('\t',entry)

@@ -19,12 +19,12 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Appointments</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('about') }}"><strong></strong>Reports</a>
+              <a class="nav-item nav-link" href="{{ url_for('staffPage', st_username = st_username) }}"><strong>Appointments</strong></a>
+              <a class="nav-item nav-link" href="#"><strong></strong>Reports</a>
             </div>
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Profile</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Log Out</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('staffProfile', st_username = st_username) }}"><strong>Profile</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>

@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+    
+    <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">{{titleText}}</legend>
+                <div class="form-group">
+                  <table border = "3">
+                    <tr>
+                      {% for button in form.radio %}
+                        <td>{{button.label}}</td>
+                      {% endfor %}
+                    </tr>
+                    <tr>
+                      {% for button in form.radio %}
+                        <td>{{button}}</td>
+                      {% endfor %}
+                    </tr>
+                  </table>
+                </div>
+                
+                <div>
+                  {{ form.submit(class="btn btn-outline-info") }}
+                </div>
+                
+      </form>
+  </div>
+{% endblock content %}

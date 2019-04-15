@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+    
+    <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">{{titleText}}</legend>
+                <div class="form-group">
+                  <table border = "3">
+                    <tr>
+                      {% for button in form.radio %}
+                        <td>{{button.label}}</td>
+                      {% endfor %}
+                    </tr>
+                    <tr>
+                      {% for button in form.radio %}
+                        <td>{{button}}</td>
+                      {% endfor %}
+                    </tr>
+                  </table>
+                </div>
+                
+                <div>
+                  {% if no_hour == False: %}
+                  Click Back to Repick Date. Otherwise, Click Submit.<br>
+                  {{ form.submit(class="btn btn-outline-info") }}
+                  {{ form.back(class="btn btn-outline-info") }}
+                  {% else: %}
+                  There is no Appointment, Press Back
+                  {{ form.back(class="btn btn-outline-info") }}
+                  {% endif %}
+                </div>
+                
+      </form>
+  </div>
+{% endblock content %}

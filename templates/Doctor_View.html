@@ -10,7 +10,7 @@
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 
-    <title>Medical Clinic</title>
+    <title>Doctor Profile</title>
 </head>
 <body>
     <header class="site-header">
@@ -22,35 +22,50 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Home</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('about') }}"><strong>About</strong></a>
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
+                    </div>
+              </li>
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Prescription</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('home')}}">Request Prescription</a>
+                    <a class="dropdown-item" href="{{url_for('home')}}">View Past Prescription </a>
+                    </div>
+              </li>
+
             </div>
+
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Login</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Register</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>
       </nav>
     </header>
-    <main role="main" class="container">
-      <div class="row">
-        <div class="col-md-8">
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endwith %}
-          {% block content %}
-          {% endblock %}
-        </div>
+
+<main role="main" class="container">
+        <div class="col-lg-5">
+    <div class="card" style="width: 60% background-color:gray;">
+      <img src="../static/Images/profile.jpg" alt="profile_imag" height="120" width="120" >
+      <div class="container" style="padding: 2px 16px;">
+        <h2>{{first_name}} {{last_name}} </h2>
+        <p class="title"> Account Type: Doctor</p>
+        <p>DOB: {{dob}}</p>
+        <p>Email: {{email}}</p>
+        <p>Phone: {{phone}}</p>
+        <p><button class="button">Edit Profile</button></p>
       </div>
-    </main>
+    </div>
+  </div>
+</main>
+
 
 
     <!-- Optional JavaScript -->

@@ -73,6 +73,26 @@ input[type=submit]:hover {
 </style>
 </head>
 <body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top" style="background-color: #181718">
+        <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Home</strong></a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Login</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Register</strong></a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
 <div class="container">
   <div style="text-align:center">
     <h2>Contact Us</h2>

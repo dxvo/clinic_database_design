@@ -26,7 +26,7 @@
               <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
                     <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                    <a class="dropdown-item" href="{{url_for('home')}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
                     <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
                     </div>
               </li>
@@ -43,7 +43,7 @@
 
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Log Out</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>

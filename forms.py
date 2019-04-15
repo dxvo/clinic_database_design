@@ -1,12 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField, RadioField
+from wtforms import StringField,IntegerField,SelectField,PasswordField,SubmitField,BooleanField,DateField,widgets, SelectMultipleField, RadioField, FloatField
 from wtforms.validators import DataRequired,Length,Email,EqualTo,NumberRange,Optional, InputRequired
 from wtforms.widgets import PasswordInput, CheckboxInput, ListWidget, html_params, HTMLString
 from wtforms.fields.html5 import DateField
 from QueryEngine import QueryEngine
 from datetime import date
 import string
-
 qe = QueryEngine()
 qe.setup_default()
 
@@ -166,3 +165,67 @@ class Insurance(FlaskForm):
         render_kw={"placeholder": "1234567890"})
     cancel = SubmitField('Cancel')
     submit = SubmitField('Submit')
+
+class StaffPostForm(FlaskForm):
+    doctorDiagnosis = StringField('Diagonosis',validators=[DataRequired(),Length(min = 1, max = 200)])
+    balance = FloatField('Balance', validators=[InputRequired()])
+    submit = SubmitField('Submit')
+    blood_prescript = MultiCheckboxField(choices=[('Tp','Prescription'),('Tb','Blood Test Result')])
+
+class PostBlood(FlaskForm):
+    white_blood = FloatField('White Blood Cell Count', validators=[InputRequired()])
+    red_blood = FloatField('Red Blood Cell Count', validators=[InputRequired()])
+    hemoglobin = FloatField('Hemoglobin', validators=[InputRequired()])
+    hematocrit = FloatField('Hematocrit', validators=[InputRequired()])
+    mcv = FloatField('MCV', validators=[InputRequired()])
+    mch = FloatField('MCH', validators=[InputRequired()])
+    rdw = FloatField('RDW', validators=[InputRequired()])
+    platelet = FloatField('Platelet Count', validators=[InputRequired()])
+    lymphocyte = FloatField('Lymphocyte', validators=[InputRequired()])
+    monocyte = FloatField('Monocyte', validators=[InputRequired()])
+    cholesterol = FloatField('Cholesterol', validators=[InputRequired()])
+    iron = FloatField('Iron', validators=[InputRequired()])
+    sodium = FloatField('Sodium', validators=[InputRequired()])
+    potassium = FloatField('Potassium', validators=[InputRequired()])
+    submit = SubmitField('Submit')
+
+class PostPrescript(FlaskForm):
+    drug = StringField('Drug', validators=[DataRequired()])
+    usage = StringField('Usage Note',validators=[DataRequired(),Length(min = 1, max = 100)])
+    numfill = IntegerField('Refill Count', validators=[DataRequired(),NumberRange(min = 1, max = 99)])
+    next_submit = SubmitField('Next')
+    submit = SubmitField('Submit')
+
+class ApptDoctor(FlaskForm):
+  submitDoctor = SubmitField("Choose Primary Physician")
+  submitSpecialist = SubmitField("Find Specialist")
+
+class ApptSpecialistType(FlaskForm):
+  select = SelectField(choices = [('Allergy and Immunology','Allergy and Immunology'),  ('Ansethesiology','Ansethesiology'), ('Dermatology','Dermatology'), 
+    ('Diagnostic Radiology','Diagnostic Radiology'), ('Emergency Medicine','Emergency Medicine'), ('Family Medicine','Family Medicine'), ('General Medicine', 'General Medicine'),
+     ('Internal Medicine','Internal Medicine'), ('Medical Genetics','Medical Genetics'), ('Neurology','Neurology'), 
+    ('Nuclear Medicine','Nuclear Medicine'), ('Obstetrics and Gynecology','Obstetrics and Gynecology'), ('Ophthalmology','Ophthalmology'), 
+    ('Pathology','Pathology'), ('Pediatrics','Pediatrics'), ('Physical Medicine and Rehabili','Physical Medicine and Rehabili'), ('Preventive Medicine','Preventive Medicine'), 
+    ('Psychiatry','Psychiatry'), ('Radiation Oncology','Radiation Oncology'), ('Sugery','Sugery'), ('Urology','Urology')])
+  back = SubmitField('Back')
+  submit = SubmitField('Choose Specialization')
+
+class ApptSpecialist(FlaskForm):
+  select = SelectField(choices = [])
+  back = SubmitField('Back')
+  submit = SubmitField('Choose Specialist')
+
+class ApptLoc(FlaskForm):
+    select = SelectField(choices = [])
+    back = SubmitField('Back')
+    submit = SubmitField('Choose Location')
+
+class ApptDate(FlaskForm):
+  radio = RadioField("Date", choices = [], validators=[DataRequired()])
+  submit = SubmitField('Choose date')
+  back = SubmitField('Back')
+
+class ApptHour(FlaskForm):
+  radio = RadioField("Hour", choices = [], validators=[DataRequired()])
+  submit = SubmitField('Choose hour')
+  back = SubmitField('Back')

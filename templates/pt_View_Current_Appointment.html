@@ -18,14 +18,22 @@
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
+
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Appointments</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('about') }}"><strong></strong>Reports</a>
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username = pt_username)}}">
+                <strong>View Reports</strong>
+              </a>
             </div>
+            
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Profile</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Log Out</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username = pt_username)}}">
+                <strong>Main Profile</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{ url_for('home') }}">
+                <strong>Log Out</strong>
+              </a>
             </div>
+
           </div>
         </div>
       </nav>
@@ -54,8 +62,15 @@
                 {% endfor %}
                 <td>
                   <form action="{{ url_for('cancel_appointment',app_id = row[6])}}" method="post">
+                    <button class="btn btn-primary" type="submit" name="Cancel" value="{{row[6]}}" 
+                    onclick="alert('Successfully Cancelled. Check Email for confirmation')">
+                  Cancel App
+                </button>
+                  </form>
+                </td>
+                <td>
+                  <form action="{{ url_for('cancel_appointment',app_id = row[6])}}" method="post">
                     <button class="btn btn-primary" type="submit" name="Modify" value="{{row[6]}}">Modify App</button>
-                    <button class="btn btn-primary" type="submit" name="Cancel" value="{{row[6]}}">Cancel App</button>
                   </form>
                 </td>
               </tr>

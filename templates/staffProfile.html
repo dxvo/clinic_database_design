@@ -8,12 +8,22 @@
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 
-    <title>Staff Page</title>
+    <title>Staff Post Page</title>
 </head>
 <body>
   <main role="main" class="container">
     <div class="row">
       <div class="col-md-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
       </div>
     </div>
   </main>
@@ -25,14 +35,11 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('staffReports',st_username = st_username)}}">
-                <strong>Check Reports</strong>
-              </a>
+              <a class="nav-item nav-link" href="{{ url_for('staffPage', st_username = st_username) }}"><strong>Appointments</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('staffReports', st_username = st_username) }}"><strong></strong>Reports</a>
             </div>
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
-                <strong>Main Profile</strong>
-              </a>
+              <a class="nav-item nav-link" href="#"><strong>Profile</strong></a>
               <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
@@ -40,44 +47,7 @@
       </nav>
     </header>
     <main role="main" class="container">
-      <div class="container" style = "text-align:center;">
-        <h2 style = "text-align:left; color: white;">Appointments</h2>
-        <table class="table table-dark table-striped table-hover table-bordered text-white">
-          <thead>
-            <th>Index</th>
-            <th>Doctor</th>
-            <th>Patient</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>App Status</th>
-            <td>Modify</td>
-          </thead>
-          <tbody>
-            {% for row in data %}
-              <tr>
-                {% for item in row %}
-                  {% if item != row[1]: %}
-                    {% if item != row[2]: %}
-                      <td>
-                        {{item}}
-                      </td>
-                    {% endif %}
-                  {% endif %}
-                {% endfor %}
-                <td>
-                  <form class="" action="" method="post">
-                    {% if (row[7] == 'Booked') and (row[2] == none): %}
-                      <button type="submit" name="confirm" value="{{row[1]}}">Confirm</button>
-                    {% else: %}
-                      <button type="submit" name="selectRow" value="{{row[1]}}">Select</button>
-                    {% endif %}
-                  </form>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      <h2>Staff Profile</h2>
     </main>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
