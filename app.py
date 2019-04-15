@@ -596,21 +596,88 @@ def login():
         username = form.user.data
         password = form.password.data
         if login_check.login_check(username, password) == True:
+
             if login_check.account_type(username, password) == "patient":
-                flash(f'You Successfully Log in','success')
+                # flash(f'You Successfully Log in','success')
                 return redirect(url_for('Patient_View',pt_username = username))
 
             elif login_check.account_type(username, password) == "doctor":
-                flash(f'You Successfully Log in','success')
-                return render_template('doctor.html')
+                # flash(f'You Successfully Log in','success')
+                return redirect(url_for('Doctor_View',dt_username = username))
 
             elif login_check.account_type(username, password) == "staff":
-                flash(f'You Successfully Log in','success')
+                # flash(f'You Successfully Log in','success')
                 return redirect(url_for('Staff_View',st_username = username))
         else:
             flash('Invalid Account, Check Your Username and Password', 'danger')
 
     return render_template('login.html', title='Login', form=form)
+
+'''
+_________________________________________________________________________________________________
+            
+                        DOCTOR - DOCTOR - SECTION HERE. 
+_________________________________________________________________________________________________
+'''
+@app.route("/Doctor_View/<dt_username>", methods=['GET', 'POST'])
+def Doctor_View(dt_username):
+    qe.connect()
+    query_string = (f"SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{dt_username}';")
+
+    result = qe.do_query(query_string)
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return render_template('Doctor_View.html',
+                            first_name =first_name,
+                            email = email,
+                            last_name = last_name,
+                            phone = phone, dob = dob,dt_username = dt_username)
+
+
+'''
+_________________________________________________________________________________________________
+            
+                        DOCTOR - VIEW TODAY  APPONTMENT
+_________________________________________________________________________________________________
+'''
+@app.route("/doc_today_appointment/<dt_username>",methods=['GET', 'POST'])
+def doc_today_appointment(dt_username):
+
+    qe.connect()
+    query_string = (f"SELECT Appt_ID,App_date,App_hour,First_Name,Office_Name,Appt_Status \
+        FROM appointment, office,log_in,general_info \
+        WHERE  log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
+        AND log_in.User_ID = appointment.With_Doctor \
+        AND DATE(appointment.App_date) = CURDATE() \
+        AND appointment.Patient_ID = general_info.Hospital_ID;")
+
+
+    result = qe.do_query(query_string)
+    qe.disconnect()
+    print(result)
+
+    data = []
+    for i in result:
+        data.append(list(i))
+
+    for elem in data:
+        hour = int(elem[2])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[2] = str(hour) + ":00 " + suffix
+
+    return render_template("doc_today_appointment.html",
+                            data = data, dt_username=dt_username)
+
 
 '''
 _________________________________________________________________________________________________
