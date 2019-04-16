@@ -510,7 +510,6 @@ def scheduleDate(pt_username, dr_id, apt_loc):
 @app.route("/appointmentHour/<pt_username>/<dr_id>/<apt_loc>/<apt_date>", methods = ['GET', 'POST'])
 def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
   form = ApptHour()
-  #print(type(apt_date))
   qe.connect()
   loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(loc_string)[0][0]
@@ -520,12 +519,11 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
   
   hours = [8, 9, 10, 11, 12, 13, 14, 15, 16]
   
-  print(appts)
+  #print(appts)
   if appts:
     for appt in appts:
-            #print("removing:", appt[0])
         if(appt[0] in hours):
-            print("removing:", appt[0])
+            #print("removing:", appt[0])
             hours.remove(int(appt[0]))
   
   for hour in hours:
@@ -548,7 +546,6 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
       if apt_hour == "None":
           flash(f'Please Pick a Time', 'danger')
       else:
-          print("soemthing here")
           apt_type = ""
           qe.connect()
           loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
@@ -559,12 +556,10 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
           pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
           pp_id = qe.do_query(pp_string)[0][0]
 
-          print("Primary Physician ID: ", pp_id, "Dr ID: ", dr_id)
-
-          apt_type == "General"
+          apt_type = "General"
           if pp_id != int(dr_id):
               apt_type = "Specialist"
-
+          print(apt_type)
           insert_string = f"INSERT INTO APPOINTMENT(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
           qe.do_query(insert_string)
           qe.commit()
@@ -576,7 +571,7 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
   elif form.back.data:
     return redirect(url_for('scheduleDate',pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
   
-  return render_template('apptHour.html', form = form, titleText = "Choose Hour", no_hour = no_hour)
+  return render_template('apptHour.html', form = form, titleText = "Choose Hour", no_hour = no_hour, pt_username = pt_username)
 
 # @app.route("/staffReports")
 # def staffReports():
