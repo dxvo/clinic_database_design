@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Medical Clinic</title>
+</head>
+<body>
+        <main role="main" class="container">
+                <div class="row">
+                  <div class="col-md-8">
+                  </div>
+                </div>
+              </main>
+              <header class="site-header">
+                    <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+                      <div class="container">
+                        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+                          <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarToggle">
+                          <div class="navbar-nav mr-auto">
+                            
+                            <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
+                                <strong>Today Appointment</strong>
+                              </a>
+                            <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
+                                <strong>Look Up Appointment</strong>
+                              </a>
+                          </div>
+                          <div class="navbar-nav">
+                            <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                              <strong>Main Profile</strong>
+                            </a>
+                            <a class="nav-item nav-link" href="{{ url_for('staffMakeAppt', st_username = st_username)}}">
+                                <strong>Make Appointment</strong>
+                            </a>
+                            <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+                          </div>
+                        </div>
+                      </div>
+                    </nav>
+                  </header>
+              <main role="main" class="container">
+                <div class="row">
+                  <div class="col-md-8">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                      {% if messages %}
+                        {% for category, message in messages %}
+                          <div class="alert alert-{{ category }}">
+                            {{ message }}
+                          </div>
+                        {% endfor %}
+                      {% endif %}
+                    {% endwith %}
+                    {% block content %}
+                    {% endblock %}
+                  </div>
+                </div>
+              </main>
+
+    <main role="main" class="container"> 
+    <div class="col-lg-7">    
+    <div class="content-section">
+    
+    <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Appointment Location</legend>
+                <div class="form-group">
+                
+                <div class = "form-group col-md-5">
+                    {{ form.select.label(class="form-control-label") }}
+                    {% if form.select.errors %}
+                        {{ form.select(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.select.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.select(class="form-control form-control-lg") }}
+                    {% endif %}
+                </div>
+                
+                
+                </div>
+           </fieldset>
+                <div class="form-group">
+                Click Back If You Want to Repick.<br>
+                Click Submit to Choose this Location.<br>
+                {{ form.back(class="btn btn-outline-info") }}
+                {{ form.submit(class="btn btn-outline-info") }}
+                </div> 
+      </form>
+  </div>
+  </div>
+  </main>
+</body>
+</html>
+

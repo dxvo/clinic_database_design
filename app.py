@@ -1375,6 +1375,239 @@ def cancel_appointment(app_id):
 
 
 
+@app.route("/staffMakeAppt/<st_username>", methods = ['GET','POST'])
+def staffMakeAppt(st_username):
+    form = MakeApptStaff()
+    if form.validate_on_submit():
+        fname = form.first_name.data
+        lname = form.last_name.data
+        dob = form.dob.data
+        pt_query = f"SELECT L.UserName FROM GENERAL_INFO AS G, PATIENT AS P, LOG_IN AS L WHERE G.First_Name = '{fname}' AND G.Last_Name = '{lname}' AND G.DOB = '{str(dob)}' AND G.Hospital_ID = P.Patient_ID AND G.Hospital_ID = L.User_ID"
+        qe.connect()
+        pt_username = qe.do_query(pt_query)
+        qe.disconnect()
+        if not pt_username:
+            flash(f'This Patient is Not in Clinic Database','danger')
+        else:
+            pt_username = pt_username[0][0]
+            return redirect(url_for('pickDoctor',st_username = st_username, pt_username = pt_username))
+
+    return render_template("staffMakeAppt.html", st_username = st_username, form = form)
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>",methods = ['GET','POST'])
+def pickDoctor(st_username, pt_username):
+    qe.disconnect()
+    qe.connect()
+    query_patient = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
+    pt_id = qe.do_query(query_patient)[0][0]
+    query_approval = f"SELECT Approval_Status FROM patient WHERE Patient_ID = {pt_id}"
+    approval = qe.do_query(query_approval)[0][0]
+    approval = (approval == 'T')
+    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM PATIENT AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
+    doctor = qe.do_query(query_doctor)[0]
+    qe.disconnect()
+    form = staffPickDoctor()
+    if(form.submitSpecialist.data):
+        return redirect(url_for("pickSpecialType", st_username = st_username, pt_username = pt_username))
+    elif form.submitDoctor.data:
+        qe.connect()
+        query_string = (f"SELECT P.Primary_physician_ID FROM PATIENT AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
+        dr_id = qe.do_query(query_string)[0][0]
+        qe.disconnect()
+        return redirect(url_for('pickLoc', st_username = st_username, pt_username = pt_username, dr_id = dr_id))
+
+    return render_template('PickDoctor.html', form = form, primary = doctor[1], approval = approval, pt_username = pt_username, st_username = st_username)
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/pickspecialtype",methods = ['GET','POST'])
+def pickSpecialType(st_username, pt_username):
+    form = StaffPickSpecialType()
+    if(form.back.data):
+        return redirect(url_for('staffMakeAppt', st_username = st_username, pt_username = pt_username))
+    elif(form.submit.data):
+        return redirect(url_for("pickSpecialist", st_username = st_username, pt_username = pt_username, specialization = form.select.data))
+  
+    return render_template("PickSpecialType.html", form = form, st_username = st_username, pt_username = pt_username)
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<specialization>/pickspecialist", methods = ['GET','POST'])
+def pickSpecialist(st_username, pt_username,specialization ):
+    form = StaffSpecialist()
+    query_doctors = f"SELECT G.Hospital_ID, G.Last_Name, G.First_Name FROM general_info AS G, specialization as S, doctor as D WHERE S.Type = '{specialization}' AND D.Specialization_ID = S.Specialization_ID AND D.Doctor_ID = G.Hospital_ID"
+  
+    qe.connect()
+    table = qe.do_query(query_doctors)
+    qe.disconnect()
+  
+    choices = []
+  
+    for elem in table:
+        choice = [elem[0], elem[2][0] + ". " + elem[1]]
+        choices.append(choice)
+  
+    form.select.choices = choices
+  
+    if(form.back.data):
+        return redirect(url_for("pickSpecialType", st_username = st_username, pt_username = pt_username))
+    elif(form.submit.data):
+        dr_id = form.select.data
+        return redirect(url_for("pickLoc", st_username = st_username, pt_username = pt_username, dr_id = dr_id))
+  
+    return render_template("PickSpecialist.html", st_username = st_username, form = form, pt_username = pt_username)
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>", methods = ['GET','POST'])
+def pickLoc(st_username, pt_username, dr_id):
+    form = staffPickLoc()
+    query_string = f"SELECT O.Office_Name FROM OFFICE AS O, DOCTOR_OFFICE AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
+    qe.connect()
+    apt_loc = qe.do_query(query_string)
+    qe.disconnect()
+    form.select.choices = [(l[0], l[0]) for l in apt_loc]
+    #print(form.select.choices)
+    if (form.submit.data):
+        #print(form.select.data)
+        apt_loc = form.select.data
+        #print(apt_loc)
+        return redirect(url_for('pickDate', st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
+    elif (form.back.data):
+        qe.connect()
+        pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+        pt_id = qe.do_query(pt_string)[0][0]
+        pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+        pp_id = qe.do_query(pp_string)[0][0]
+        qe.disconnect()
+
+        back_to_primary = True
+        if pp_id != int(dr_id):
+            back_to_primary = False
+        
+        if back_to_primary == True:
+            return redirect(url_for('staffMakeAppt',pt_username = pt_username))
+        elif back_to_primary == False:
+            return redirect(url_for('pickSpecialType', pt_username = pt_username))
+    
+    return render_template("pickLoc.html", st_username = st_username, pt_username = pt_username, form= form )
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>/<apt_loc>", methods = ['GET','POST'])
+def pickDate(st_username, pt_username,dr_id,apt_loc):
+  form = StaffPickDate()
+  qe.connect()
+  query_loc = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  loc_id = qe.do_query(query_loc)[0][0]
+  query_string = f"SELECT D.Working_date FROM APPOINTMENT AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
+  already_string = f"SELECT A.App_date FROM APPOINTMENT AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
+  already = qe.do_query(already_string)
+
+  appts = qe.do_query(query_string)  
+    
+  qe.disconnect()
+
+  workingDate = appts[0][0]
+  #print("working date: ",workingDate)
+  weekday = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su']
+  
+  dates = {}  # Stores valid dates - pre-existing/booked appointments will set days to False
+  
+  ordToday = date.today().toordinal()
+  for ordDay in range(ordToday, ordToday + 30):
+    dates[date.fromordinal(ordDay)] = True
+
+  for elem in dates:
+    if(weekday[date.weekday(elem)] in workingDate):
+      label = str(elem.month) + '/' + str(elem.day)
+      form.radio.choices.append([elem, label])
+
+  if form.submit.data:
+    apt_date = form.radio.data
+    Datepick = True
+    #print(already)
+    if already: 
+        for elem in already:
+            if str(elem[0]) == apt_date:
+                Datepick = False
+    if apt_date == "None":
+        flash(f'Please Pick a Date', 'danger')
+    elif Datepick == False:
+        flash(f'You Already Have Appointment on this day. Please Choose Another', 'danger')
+    else:
+        return redirect(url_for('pickHour', st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc, apt_date = apt_date))
+  elif form.back.data:
+      return redirect(url_for('pickLoc', st_username = st_username, pt_username = pt_username, dr_id = dr_id))
+
+  return render_template('PickDate.html', st_username = st_username, form = form, titleText = "Choose Date", pt_username = pt_username)
+
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>/<apt_loc>/<apt_date>", methods = ['GET','POST'])
+def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
+  form = StaffPickHour()
+  qe.connect()
+  loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  loc_id = qe.do_query(loc_string)[0][0]
+  query_appointments = (f"SELECT App_hour FROM appointment WHERE With_Doctor = {dr_id} AND App_date = '{str(apt_date)}' AND Appt_Status = 'Booked' AND App_Location_ID = {loc_id}")
+  appts = qe.do_query(query_appointments)
+  qe.disconnect()
+  
+  hours = [8, 9, 10, 11, 12, 13, 14, 15, 16]
+  
+  #print(appts)
+  if appts:
+    for appt in appts:
+        if(appt[0] in hours):
+            #print("removing:", appt[0])
+            hours.remove(int(appt[0]))
+  
+  for hour in hours:
+    modHour = hour % 12
+    if(modHour == 0):
+      modHour = 12
+    suffix = 'AM'
+    if(hour >= 12):
+      suffix = 'PM'
+    label = str(modHour) + ":00 " + suffix
+    form.radio.choices.append([hour, label])
+
+  no_hour = False
+  if not hours:
+      no_hour = True 
+
+  #print(form.radio.choices)
+  if form.submit.data:
+      apt_hour = form.radio.data
+      if apt_hour == "None":
+          flash(f'Please Pick a Time', 'danger')
+      else:
+          apt_type = ""
+          qe.connect()
+          loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+          apt_id = qe.do_query(loc_string)[0][0]
+          pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+          pt_id = qe.do_query(pt_string)[0][0]
+
+          pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+          pp_id = qe.do_query(pp_string)[0][0]
+
+          apt_type = "General"
+          if pp_id != int(dr_id):
+              apt_type = "Specialist"
+          #print(apt_type)
+          insert_string = f"INSERT INTO APPOINTMENT(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
+          qe.do_query(insert_string)
+          qe.commit()
+          qe.disconnect()
+          if apt_type == "Specialist":
+            approval_string = f"UPDATE PATIENT SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+            qe.connect()
+            qe.do_query(approval_string)
+            qe.commit()
+            qe.disconnect()
+
+          flash(f'You Successfully Make An Appointment','success')
+          return redirect(url_for('staffMakeAppt', st_username = st_username, pt_username = pt_username, dr_id = dr_id))
+
+  elif form.back.data:
+    return redirect(url_for('pickDate',st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
+  
+  return render_template('PickHour.html', st_username = st_username, form = form, titleText = "Choose Hour", no_hour = no_hour, pt_username = pt_username)
+
+
+
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 

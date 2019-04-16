@@ -28,6 +28,9 @@
               <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
                   <strong>Look Up Appointment</strong>
                 </a>
+              <a class="nav-item nav-link" href="{{ url_for('staffMakeAppt', st_username = st_username)}}">
+                <strong>Make Appointment </strong>
+              </a>
             </div>
             <div class="navbar-nav">
               <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">

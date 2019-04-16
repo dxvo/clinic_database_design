@@ -244,3 +244,46 @@ class ApptHour(FlaskForm):
   radio = RadioField("Hour", choices = [], validators=[DataRequired()])
   submit = SubmitField('Choose hour')
   back = SubmitField('Back')
+
+
+
+
+class staffPickDoctor(FlaskForm):
+  submitDoctor = SubmitField("Choose Primary Physician")
+  submitSpecialist = SubmitField("Find Specialist")
+
+class staffPickLoc(FlaskForm):
+  select = SelectField(choices = [])
+  back = SubmitField('Back')
+  submit = SubmitField('Choose Location')
+
+class StaffPickSpecialType(FlaskForm):
+  select = SelectField(choices = [('Allergy and Immunology','Allergy and Immunology'),  ('Ansethesiology','Ansethesiology'), ('Dermatology','Dermatology'), 
+    ('Diagnostic Radiology','Diagnostic Radiology'), ('Emergency Medicine','Emergency Medicine'), ('Family Medicine','Family Medicine'), ('General Medicine', 'General Medicine'),
+     ('Internal Medicine','Internal Medicine'), ('Medical Genetics','Medical Genetics'), ('Neurology','Neurology'), 
+    ('Nuclear Medicine','Nuclear Medicine'), ('Obstetrics and Gynecology','Obstetrics and Gynecology'), ('Ophthalmology','Ophthalmology'), 
+    ('Pathology','Pathology'), ('Pediatrics','Pediatrics'), ('Physical Medicine and Rehabili','Physical Medicine and Rehabili'), ('Preventive Medicine','Preventive Medicine'), 
+    ('Psychiatry','Psychiatry'), ('Radiation Oncology','Radiation Oncology'), ('Sugery','Sugery'), ('Urology','Urology')])
+  back = SubmitField('Back')
+  submit = SubmitField('Choose Specialization')
+
+class StaffSpecialist(FlaskForm):
+  select = SelectField(choices = [])
+  back = SubmitField('Back')
+  submit = SubmitField('Choose Specialist')
+
+class StaffPickDate(FlaskForm):
+  radio = RadioField("Date", choices = [], validators=[DataRequired()])
+  submit = SubmitField('Choose date')
+  back = SubmitField('Back')
+
+class StaffPickHour(FlaskForm):
+  radio = RadioField("Hour", choices = [], validators=[DataRequired()])
+  submit = SubmitField('Choose hour')
+  back = SubmitField('Back')
+
+class MakeApptStaff(FlaskForm):
+    first_name = StringField("First Name", validators=[DataRequired()])
+    last_name = StringField("Last Name", validators=[DataRequired()])
+    dob = DateField("Date Of Birth", validators =[DataRequired()])
+    submit = SubmitField("Submit")

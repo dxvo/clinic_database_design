@@ -8,7 +8,7 @@ FROM doctor_office,staff,office
 WHERE  staff.Office_Location_ID =  doctor_office.Office_ID AND office.Office_ID = doctor_office.Office_ID
 
 
----TRIGGER
+---TRIGGER --- 
 CREATE TRIGGER after_intsert_specialist_appt
 AFTER INSERT ON `appointment` FOR EACH ROW
 BEGIN
@@ -19,3 +19,4 @@ IF (appointment.App_Type = 'Specialist') THEN
 	WHERE appointment.Patient_ID  = patient.Patient_ID;
 END IF;
 END 
+
