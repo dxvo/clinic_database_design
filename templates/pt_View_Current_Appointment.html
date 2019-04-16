@@ -21,7 +21,7 @@
 
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username = pt_username)}}">
-                <strong>View Reports</strong>
+                <strong>View Diagnostic</strong>
               </a>
             </div>
             
@@ -63,14 +63,17 @@
                 <td>
                   <form action="{{ url_for('cancel_appointment',app_id = row[6])}}" method="post">
                     <button class="btn btn-primary" type="submit" name="Cancel" value="{{row[6]}}" 
-                    onclick="alert('Successfully Cancelled. Check Email for confirmation')">
+                    onclick="alert('Appointment Successfully Cancelled')">
                   Cancel App
                 </button>
                   </form>
                 </td>
                 <td>
-                  <form action="{{ url_for('cancel_appointment',app_id = row[6])}}" method="post">
-                    <button class="btn btn-primary" type="submit" name="Modify" value="{{row[6]}}">Modify App</button>
+                  <form action="{{ url_for('modify_current_appointment',app_id = row[6])}}" method="post">
+                    <button class="btn btn-primary" type="submit" name="Modify" value="{{row[6]}}" 
+                    onclick="confirm('Your current appointment will be cancelled!')">
+                    Modify App
+                  </button>
                   </form>
                 </td>
               </tr>

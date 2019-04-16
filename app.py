@@ -953,8 +953,35 @@ def cancel_appointment(app_id):
     return redirect(url_for('SendEmail',D_Fname = doctor_fname,D_Email = doctor_email,
         P_Fname = patient_fname,P_Email = patient_email,Type = Type))
 
+'''
+_________________________________________________________________________________________________
+            
+                    MODIFY CURRENT APPOINTMENT
+_________________________________________________________________________________________________
+'''
+@app.route("/modify_current_appointment/<app_id>",methods=['GET', 'POST'])
+def modify_current_appointment(app_id):
+    qe.connect()
+    query_string = (f"UPDATE appointment \
+        SET Appt_Status  = 'Cancelled' \
+        WHERE  Appt_ID =  {app_id};")
+    qe.do_query(query_string);
+    qe.commit()
+    qe.disconnect()
 
+
+    qe.connect()
+    query_string2 = (f"SELECT UserName \
+        FROM appointment,log_in \
+        WHERE   Appt_ID =  {app_id} AND appointment.Patient_ID = log_in.User_ID")
+
+    result = qe.do_query(query_string2);
+
+    pt_username = result[0][0]
+    qe.disconnect()
+    
+    return redirect(url_for('makeAppointment',pt_username=pt_username))
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
 
