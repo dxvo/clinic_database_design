@@ -14,27 +14,34 @@
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
-
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username = pt_username)}}">
-                <strong>Main Profile</strong>
-              </a>
-            </div>
-            
-            <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('home') }}">
-                <strong>Log Out</strong>
-              </a>
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
+                    </div>
+              </li>
+                <a class="nav-item nav-link" href="{{url_for('Patient_Health_Profile',pt_username=pt_username)}}"><strong>Health Profile</strong></a>
+                <a class="nav-item nav-link" href="{{url_for('requestedSpecialist',pt_username=pt_username)}}"><strong>Request Specialist</strong></a>
             </div>
 
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username=pt_username) }}"><strong>Home</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+            </div>
           </div>
         </div>
       </nav>
     </header>
+    
     <main role="main" class="container">
       <div class="container" style = "text-align:center;">
         <h4 style = "text-align:left; color: white;">Current Appointments</h4>

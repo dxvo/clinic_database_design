@@ -14,20 +14,29 @@
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
-            
-            <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('Doctor_View',dt_username = dt_username)}}">
-                <strong>Main Profile</strong>
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('doc_today_appointment',dt_username = dt_username)}}">
+                <strong> View Today Appointment</strong>
               </a>
-              <a class="nav-item nav-link" href="{{ url_for('home') }}">
+              <a class="nav-item nav-link" href="{{ url_for('specialistApproval',dt_username = dt_username)}}">
+                  <strong>Pending Specialist Approval</strong>
+                </a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{url_for('Doctor_View',dt_username = dt_username)}}">
+                <strong>Home Profile</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{url_for('login')}}">
                 <strong>Log Out</strong>
               </a>
-            </div>
 
+            </div>
           </div>
         </div>
       </nav>

@@ -60,7 +60,7 @@ def insurance(pt_username):
     exp_date = form.expir_date.data
     if form.cancel.data:
         flash(f'You Successfully Created Account, Please Log in', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     elif form.submit.data:
         if insur_id == None or insur_name == None or insur_phone == None:
             flash(f'Please Fill All of Them', 'danger')
@@ -71,7 +71,7 @@ def insurance(pt_username):
         else:
             registerform.insert_insur(pt_username, insur_id, insur_name, exp_date, insur_phone)
             flash(f'You Successfully Created Account, Please Log in', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('login'))
     return render_template('insurance.html', form = form)
 
 @app.route("/patient_reg/<pt_username>/<office>", methods = ['GET','POST'])
@@ -124,7 +124,7 @@ def staff_reg(st_username):
         #print(work_date)
         registerform.insert_staff(st_username, office_loc, work_date)
         flash(f'Account is Registerd, Please Log in!', 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('login'))
     return render_template('staff_reg.html', form = form)
 
 ###### END STAFF REGISTERATION #####
@@ -147,7 +147,7 @@ def add_loc(dr_username):
                 flash(f'You Have Worked on One of Those Days, Please Pick another!', 'danger')
             else:
                 flash(f'Account is Registerd, Please Log in!', 'success')
-                return redirect(url_for('home'))
+                return redirect(url_for('login'))
         elif form.add_loc.data:
             office_choice, work_date_choice = registerform.add_loc(dr_username,office_loc,work_date)
             if office_choice == False:
@@ -160,11 +160,11 @@ def add_loc(dr_username):
                 return redirect(url_for('add_loc', dr_username = dr_username))
         elif form.cancel.data:
             flash(f'Account is Registerd, Please Log in!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('login'))
     else:
         if form.cancel.data:
             flash(f'Account is Registerd, Please Log in!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('login'))
     return render_template('add_loc.html', form = form)
 
 @app.route("/register/doc_reg/<dr_username>", methods = ['GET','POST'])
@@ -179,7 +179,7 @@ def doc_reg(dr_username):
             #print(work_date)
             registerform.insert_doc(dr_username, office_loc, work_date, spec)
             flash(f'Account is Registerd, Please Log in!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('login'))
         elif form.add_loc.data:
             registerform.insert_doc(dr_username, office_loc, work_date, spec)
             return redirect(url_for('add_loc',dr_username = dr_username))
@@ -656,13 +656,20 @@ def staffConfirm(st_username, appt_id):
         qe.commit()
         qe.disconnect()
         
-        flash(f'Successfully Confirmed', 'success')
+        flash(f'Patient is checked in for today appointment', 'success')
         return redirect(url_for('staffPage', st_username = st_username))
 
     return render_template('staffConfirm.html', form = form, st_username = st_username,blood_typeExist = blood_typeExist, blood = blood )
+
+
+
 @app.route("/staffPage/<st_username>/staffReports",methods = ['GET','POST'])
 def staffReports(st_username):
     return render_template('staffReports.html', st_username = st_username)
+
+
+
+
 
 @app.route("/staffPage/<st_username>/staffProfile", methods = ['GET','POST'])
 def staffProfile(st_username):
@@ -730,6 +737,8 @@ def staffApptSearch(st_username):
         else:
             flash(f"Enter a date",'danger')
     return render_template("staffApptSearch.html",form = form, st_username = st_username)
+
+
 
 @app.route("/staffApptSearch/<st_username>/<date_search>",methods = ['GET','POST'])
 def staffAptSearchResult(st_username, date_search):
@@ -994,6 +1003,8 @@ def makeAppointment(pt_username):
         return redirect(url_for('appointmentloc', pt_username = pt_username, dr_id = dr_id))
 
     return render_template('apptDoctor.html', form = form, primary = doctor[1], approval = approval, pt_username = pt_username)
+
+
 
 @app.route("/specialistType/<pt_username>", methods = ['GET', 'POST'])
 def specialistType(pt_username):
@@ -1365,5 +1376,5 @@ def cancel_appointment(app_id):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
 

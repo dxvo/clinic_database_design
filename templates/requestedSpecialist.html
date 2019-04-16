@@ -22,13 +22,21 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Make Apppintment</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Manage Apppintments</strong></a>
-              <a class="nav-item nav-link" href="#"><strong>Request A Specialist</strong></a>
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
+                    </div>
+              </li>
+                <a class="nav-item nav-link" href="{{url_for('Patient_Health_Profile',pt_username=pt_username)}}"><strong>Health Profile</strong></a>
+                <a class="nav-item nav-link" href="{{url_for('requestedSpecialist',pt_username=pt_username)}}"><strong>Request Specialist</strong></a>
             </div>
+
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('Patient_View', pt_username = pt_username) }}"><strong>Profile</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username=pt_username) }}"><strong>Home</strong></a>
               <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>

@@ -25,9 +25,13 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('Today Appointment',st_username = st_username) }}">
-                <strong>Today Appointment</strong>
-              </a>
+              
+              <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
+                  <strong>Today Appointment</strong>
+                </a>
+              <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
+                  <strong>Look Up Appointment</strong>
+                </a>
             </div>
             <div class="navbar-nav">
               <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
@@ -39,7 +43,6 @@
         </div>
       </nav>
     </header>
-
     <main role="main" class="container">
             <div class="row">
               <div class="col-md-8">

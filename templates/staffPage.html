@@ -11,6 +11,22 @@
     <title>Staff Page</title>
 </head>
 <body>
+    <main role="main" class="container">
+    <div class="row">
+      <div class="col-md-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
   <main role="main" class="container">
     <div class="row">
       <div class="col-md-8">

@@ -35,18 +35,24 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('staffPage', st_username = st_username) }}"><strong>Appointments</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('staffReports', st_username = st_username) }}"><strong></strong>Reports</a>
+              
+              <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
+                  <strong>Today Appointment</strong>
+                </a>
+              <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
+                  <strong>Look Up Appointment</strong>
+                </a>
             </div>
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('staffProfile', st_username = st_username) }}"><strong>Profile</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                <strong>Main Profile</strong>
+              </a>
               <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>
       </nav>
     </header>
-
     <main role="main" class="container">
       <div class="form-container">
       <h2 style = "color: white;">Post Appointment</h2>

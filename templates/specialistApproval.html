@@ -23,18 +23,28 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('doc_today_appointment',dt_username = dt_username)}}"><strong>View Today Appointments</strong></a>
-              <a class="nav-item nav-link" href="#"><strong>Specialist Requests</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('doc_today_appointment',dt_username = dt_username)}}">
+                <strong> View Today Appointment</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{ url_for('specialistApproval',dt_username = dt_username)}}">
+                  <strong>Pending Specialist Approval</strong>
+                </a>
             </div>
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('Doctor_View',dt_username = dt_username)}}"><strong>Profile</strong></a>
-              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+              <a class="nav-item nav-link" href="{{url_for('Doctor_View',dt_username = dt_username)}}">
+                <strong>Home Profile</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{url_for('login')}}">
+                <strong>Log Out</strong>
+              </a>
+
             </div>
           </div>
         </div>
       </nav>
     </header>
+
     <main role="main" class="container">
       <div class="row">
         <div class="col-md-8">

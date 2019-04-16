@@ -16,29 +16,29 @@
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
-          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
+              
               <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
-                <strong> View Appointment Status</strong>
-              </a>
+                  <strong>Today Appointment</strong>
+                </a>
+              <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
+                  <strong>Look Up Appointment</strong>
+                </a>
             </div>
-            <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{url_for('login')}}">
-                <strong>Log Out</strong>
+              <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                <strong>Main Profile</strong>
               </a>
-
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>
         </div>
       </nav>
     </header>
-
-
 <main role="main" class="container">
   <div class="col-lg-5" style="text-align: left;">
     <div class="card" style="width: 80%; background-color:white;">
