@@ -564,10 +564,9 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
-
-          flash(f'You Successfully Make An Appointment','success')
-          return redirect(url_for('makeAppointment', pt_username = pt_username))
-
+          #flash(f'Appointment is Booked', 'success')
+          return redirect(url_for('Patient_View', pt_username = pt_username))
+        
   elif form.back.data:
     return redirect(url_for('scheduleDate',pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
   
