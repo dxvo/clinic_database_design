@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Request Specialist</title>
+</head>
+<body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Make Apppintment</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('makeAppointment', pt_username = pt_username) }}"><strong>Manage Apppintments</strong></a>
+              <a class="nav-item nav-link" href="#"><strong>Request A Specialist</strong></a>
+            </div>
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View', pt_username = pt_username) }}"><strong>Profile</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-md-8">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        <div class="container">
+          <h2 style="text-align: left;color: white">Request Specialist</h2>
+          <br>
+            <form class="" action="" method="post">
+              <div class="form-group" style="color: white">
+                {{ form.reason.label}}
+                {{ form.reason }}
+              </div>
+              {{ form.submit.label}} -->
+              {{ form.submit }}
+            </form>
+            <br>
+        </div>
+        </div>
+      </div>
+      <hr>
+    </main>
+    <div class="container">
+      <div class="row">
+        <div class ="col-md-6">
+            <main role="main" class="container">
+              <div class="container" style = "text-align:center;">
+                <h3 style = "text-align:left;color: white">Past Requests</h3>
+                <br>
+                <table class="table table-dark table-striped table-hover table-bordered text-white">
+                  <thead>
+                    <th>Index</th>
+                    <th>Requested Date</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                  </thead>
+                  <tbody>
+                    {% for row in oldData %}
+                      <tr>
+                        {% for item in row %}
+                          <td>
+                            {{item}}
+                          </td>
+                        {% endfor %}
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+                <br>
+              </div>
+            </main>
+        </div>
+        <div class="col-md-6">
+          <main role="main" class="container">
+            <div class="container" style = "text-align:center;">
+              <h3 style = "text-align:left; color: white">Pending Request</h3>
+              <br>
+              <table class="table table-dark table-striped table-hover table-bordered text-white">
+                <thead>
+                  <th>Index</th>
+                  <th>Requested Date</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </thead>
+                <tbody>
+                  {% for row in pendingData %}
+                    <tr>
+                      {% for item in row %}
+                        <td>
+                          {{item}}
+                        </td>
+                      {% endfor %}
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+              <br>
+            </div>
+        </main>
+        </div>
+      </div>
+      
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

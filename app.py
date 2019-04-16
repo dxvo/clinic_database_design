@@ -1,4 +1,4 @@
-from flask import Flask, render_template, url_for, flash, redirect, request
+from flask import Flask, render_template, url_for, flash, redirect, request, make_response
 from forms import *
 from QueryEngine import QueryEngine
 from datetime import datetime,date
@@ -10,6 +10,9 @@ import forms
 import uuid
 import csv
 from flask_mail import Mail, Message
+from io import StringIO
+import csv
+import pandas as pd
 
 
 qe = QueryEngine()
@@ -45,6 +48,9 @@ def about():
 def contact():
     return render_template('contact.html')
 
+
+#REGISTERARTION OF PATIENT:
+
 @app.route("/patient_reg/<pt_username>/insurance", methods = ['GET','POST'])
 def insurance(pt_username):
     form = Insurance()
@@ -76,7 +82,7 @@ def primary_phys_pick(office, pt_username):
     office_id = qe.do_query(query_string)
     qe.disconnect()
     office_id = office_id[0][0]
-    print(office_id)
+    #print(office_id)
     query_string = (f"SELECT Hospital_ID, Last_Name FROM GENERAL_INFO, DOCTOR_OFFICE WHERE DOCTOR_OFFICE.Office_ID = {office_id} AND DOCTOR_OFFICE.Doctor_ID = GENERAL_INFO.Hospital_ID")
     qe.connect()
     dr_lname = qe.do_query(query_string)
@@ -89,7 +95,7 @@ def primary_phys_pick(office, pt_username):
         
         if form.next_submit.data:
             phys_id = form.pphys_pick.data
-            print(phys_id)
+            #print(phys_id)
             registerform.insert_patient(pt_username, phys_id)
             flash(f'You Successfully Added a Primary Physician','success')
             return redirect(url_for('insurance', pt_username = pt_username))
@@ -105,8 +111,10 @@ def patient_reg(pt_username):
         return redirect(url_for('primary_phys_pick',office = location, pt_username = pt_username))
     return render_template('patient_reg.html', form = form)
 
+######## END PATIENT REGISTERATION #########
 
-@app.route("/register/staff_reg/<uuid:st_username>", methods = ['GET','POST'])
+# REGISTERATION OF STAFF #
+@app.route("/register/staff_reg/<st_username>", methods = ['GET','POST'])
 def staff_reg(st_username):
     form = StaffForm()
     if form.validate_on_submit():
@@ -118,6 +126,10 @@ def staff_reg(st_username):
         flash(f'Account is Registerd, Please Log in!', 'success')
         return redirect(url_for('home'))
     return render_template('staff_reg.html', form = form)
+
+###### END STAFF REGISTERATION #####
+
+# REGISTERATION OF DOCTOR #
 
 @app.route("/register/doc_reg/<dr_username>/add_loc", methods = ['GET','POST'])
 def add_loc(dr_username):
@@ -173,6 +185,9 @@ def doc_reg(dr_username):
             return redirect(url_for('add_loc',dr_username = dr_username))
     return render_template('doc_reg.html', form = form)
 
+##### END DOCTOR REGISTERATION ######
+
+# GENERAL INFO SIGN UP #
 @app.route("/register", methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -235,26 +250,229 @@ def register():
     return render_template('register.html', title='Register', form=form)
 
 
+###### END GENERAL INFO SIGN UP #######
 
 
+
+'''
+_________________________________________________________________________________________________
+            
+                        LOG IN 
+_________________________________________________________________________________________________
+'''
+
+@app.route("/login", methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        username = form.user.data
+        password = form.password.data
+        if login_check.login_check(username, password) == True:
+
+            if login_check.account_type(username, password) == "patient":
+                # flash(f'You Successfully Log in','success')
+                return redirect(url_for('Patient_View',pt_username = username))
+
+            elif login_check.account_type(username, password) == "doctor":
+                # flash(f'You Successfully Log in','success')
+                return redirect(url_for('Doctor_View',dt_username = username))
+
+            elif login_check.account_type(username, password) == "staff":
+                # flash(f'You Successfully Log in','success')
+                return redirect(url_for('Staff_View',st_username = username))
+        else:
+            flash('Invalid Account, Check Your Username and Password', 'danger')
+
+    return render_template('login.html', title='Login', form=form)
+
+'''
+_________________________________________________________________________________________________
+            
+                        DOCTOR - DOCTOR - SECTION HERE. 
+_________________________________________________________________________________________________
+'''
+@app.route("/Doctor_View/<dt_username>", methods=['GET', 'POST'])
+def Doctor_View(dt_username):
+    qe.connect()
+    query_string = (f"SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{dt_username}';")
+
+    result = qe.do_query(query_string)
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return render_template('Doctor_View.html',
+                            first_name =first_name,
+                            email = email,
+                            last_name = last_name,
+                            phone = phone, dob = dob,dt_username = dt_username)
+
+
+'''
+_________________________________________________________________________________________________
+            
+                        DOCTOR - VIEW TODAY  APPONTMENT
+_________________________________________________________________________________________________
+'''
+@app.route("/doc_today_appointment/<dt_username>",methods=['GET', 'POST'])
+def doc_today_appointment(dt_username):
+
+    qe.connect()
+    query_string = (f"SELECT Appt_ID,App_date,App_hour,First_Name,Office_Name,Appt_Status \
+        FROM appointment, office,log_in,general_info \
+        WHERE  log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
+        AND log_in.User_ID = appointment.With_Doctor \
+        AND DATE(appointment.App_date) = CURDATE() \
+        AND appointment.Patient_ID = general_info.Hospital_ID;")
+
+
+    result = qe.do_query(query_string)
+    qe.disconnect()
+    print(result)
+
+    data = []
+    for i in result:
+        data.append(list(i))
+
+    for elem in data:
+        hour = int(elem[2])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[2] = str(hour) + ":00 " + suffix
+
+    return render_template("doc_today_appointment.html",
+                            data = data, dt_username=dt_username)
+
+
+@app.route("/Doctor_View/<dt_username>/specialistApproval",methods=['GET','POST'])
+def specialistApproval(dt_username):
+    qe.connect()
+    doctorID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{dt_username}';")
+    doctorID = doctorID[0][0]
+    qe.disconnect()
+    qe.connect()
+    patientData = qe.do_query(f"SELECT S.Requested_ID,S.Requested_Date,P.First_Name,P.Last_Name,P.DOB,S.Requested_Reason,P.Phone_Number FROM general_info AS P, specialistrequest AS S WHERE S.Patient_ID = P.Hospital_ID AND S.Doctor_ID = {doctorID} AND S.Requested_Status = 'Pending';")
+    qe.disconnect()
+    requestedData = []
+    for i in range(len(patientData)):
+        temp = []
+        temp.append(i + 1)
+        temp += patientData[i]
+        requestedData.append(temp)
+    if(request.method == "POST"):
+        data = request.form
+        if("approveButton" in data):
+            requestedID = data["approveButton"]
+            qe.connect()
+            patientID = qe.do_query(f"SELECT Patient_ID FROM specialistrequest WHERE Requested_ID = {requestedID};")
+            patientID = patientID[0][0]
+            qe.disconnect()
+            qe.disconnect()
+            qe.connect()
+            approvedQuery = qe.do_query(f"UPDATE specialistrequest SET Requested_Status = 'Approved' WHERE Requested_ID = {requestedID};")
+            qe.commit()
+            qe.disconnect()
+            qe.connect()
+            specialistQuery = qe.do_query(f"UPDATE patient SET Approval_Status = 1 WHERE Patient_ID = {patientID};")
+            qe.commit()
+            qe.disconnect()
+            qe.connect()
+            doctorID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{dt_username}';")
+            doctorID = doctorID[0][0]
+            qe.disconnect()
+            qe.connect()
+            patientData = qe.do_query(f"SELECT S.Requested_ID,S.Requested_Date,P.First_Name,P.Last_Name,P.DOB,S.Requested_Reason,P.Phone_Number FROM general_info AS P, specialistrequest AS S WHERE S.Patient_ID = P.Hospital_ID AND S.Doctor_ID = {doctorID} AND S.Requested_Status = 'Pending';")
+            qe.disconnect()
+            requestedData = []
+            for i in range(len(patientData)):
+                temp = []
+                temp.append(i + 1)
+                temp += patientData[i]
+                requestedData.append(temp)
+            return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
+        if("denyButton" in data):
+            requestedID = data["denyButton"]
+            qe.connect()
+            patientID = qe.do_query(f"SELECT Patient_ID FROM specialistrequest WHERE Requested_ID = {requestedID};")
+            patientID = patientID[0][0]
+            qe.disconnect()
+            qe.connect()
+            denyQuery = qe.do_query(f"UPDATE specialistrequest SET Requested_Status = 'Denied' WHERE Requested_ID = {requestedID};")
+            qe.commit()
+            qe.disconnect()
+            qe.connect()
+            specialistQuery = qe.do_query(f"UPDATE patient SET Approval_Status = 0 WHERE Patient_ID = {patientID};")
+            qe.commit()
+            qe.disconnect()
+            qe.connect()
+            doctorID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{dt_username}';")
+            doctorID = doctorID[0][0]
+            qe.disconnect()
+            qe.connect()
+            patientData = qe.do_query(f"SELECT S.Requested_ID,S.Requested_Date,P.First_Name,P.Last_Name,P.DOB,S.Requested_Reason,P.Phone_Number FROM general_info AS P, specialistrequest AS S WHERE S.Patient_ID = P.Hospital_ID AND S.Doctor_ID = {doctorID} AND S.Requested_Status = 'Pending';")
+            qe.disconnect()
+            requestedData = []
+            for i in range(len(patientData)):
+                temp = []
+                temp.append(i + 1)
+                temp += patientData[i]
+                requestedData.append(temp)
+            return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
+    return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
+
+
+'''
+_________________________________________________________________________________________________
+            
+                        STAFF - STAFF - STAFF SECTION HERE. 
+_________________________________________________________________________________________________
+'''
+
+@app.route("/Staff_View/<st_username>", methods=['GET', 'POST'])
+def Staff_View(st_username):
+    qe.connect()
+    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{st_username}';")
+
+    result = qe.do_query(query_string)
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return render_template('Staff_View.html',
+                            first_name =first_name,
+                            email = email,
+                            last_name = last_name,
+                            phone = phone, dob = dob,st_username = st_username)
+
+##### STAFF PAGE #####
 @app.route("/staffPage/<st_username>/staffPost/<appt_id>",methods = ['GET','POST'])
 def staffPost(st_username, appt_id):
     form = StaffPostForm()
     if (form.validate_on_submit()):
         if (form.submit.data):
-            print(appt_id)
+            #print(appt_id)
             diagnosis = form.doctorDiagnosis.data
             balance = form.balance.data
             insert_string = f"INSERT INTO POST_APPOINTMENT(Appointment_ID, Doctor_Diagnosis, Balance_Due) VALUE({appt_id},'{diagnosis}',{balance})"
-            print(insert_string)
+            #print(insert_string)
             qe.connect()
             qe.do_query(insert_string)
             qe.commit()
             qe.disconnect()
-            print(diagnosis)
-            print(balance)
+            #print(diagnosis)
+            #print(balance)
             blood_prescript = form.blood_prescript.data
-            print(blood_prescript)
+            #print(blood_prescript)
             blood = 'Fb'
             prescript = 'Fp'
             for elem in blood_prescript:
@@ -262,7 +480,7 @@ def staffPost(st_username, appt_id):
                     prescript = 'Tp'
                 if elem == 'Tb':
                     blood = 'Tb'
-            print(blood, prescript)
+            #print(blood, prescript)
             if blood =='Tb' and prescript == 'Fp':
                 return redirect(url_for('staffPostBlood',st_username = st_username, appt_id = appt_id))
             elif prescript == 'Tp':
@@ -382,6 +600,66 @@ def staffPostPrescript(st_username, appt_id, blood):
 
     return render_template('staffPostPrescript.html', form = form, bl = bl)
 
+@app.route("/staffPage/<st_username>/confirm/<appt_id>", methods = ['GET','POST'])
+def staffConfirm(st_username, appt_id):
+    all_blood_type = ['A+','A-','B+','B-','AB+','AB-','O-','O+']
+    form = StaffPostHealthProfile()
+    qe.connect()
+    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
+    staffID = staffID[0][0]
+    qe.disconnect()
+    blood_typeExist = True
+    health_query = f"SELECT H.BloodType FROM HEALTH_PROFILE AS H, APPOINTMENT AS A WHERE A.Appt_ID = {appt_id} AND H.Health_Profile_ID = A.Patient_ID"
+    pt_string = f"SELECT Patient_ID FROM APPOINTMENT WHERE Appt_ID = {appt_id}"
+    qe.connect()
+    blood = qe.do_query(health_query)[0][0]
+    pt_id = qe.do_query(pt_string)[0][0]
+    qe.disconnect()
+    if blood is None:
+        blood_typeExist = False
+    else:
+        blood_typeExist = True 
+    if blood_typeExist == False and form.validate_on_submit():
+        blood_type = form.bloodtype.data
+        health_summary = form.health_summary.data
+        height = form.height.data
+        weight = form.weigth.data
+        correct_blood = False
+        for elem in all_blood_type:
+            if blood_type == elem:
+                correct_blood = True
+        if correct_blood == False:
+            flash(f'Incorrect Blood Type', 'danger')
+        else:
+            update_string = f"UPDATE HEALTH_PROFILE SET BloodType = '{blood_type}', Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
+            qe.connect()
+            qe.do_query(update_string)
+            qe.commit()
+            update_string = f"UPDATE APPOINTMENT SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+            qe.do_query(update_string)
+            qe.commit()
+            qe.disconnect()
+            
+            
+            flash(f'Successfully Confirmed', 'success')
+            return redirect(url_for('staffPage', st_username = st_username))
+    elif blood_typeExist == True and form.validate_on_submit():
+        health_summary = form.health_summary.data
+        height = form.height.data
+        weight = form.weigth.data
+        update_string = f"UPDATE HEALTH_PROFILE SET Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
+        qe.connect()
+        qe.do_query(update_string)
+        qe.commit()
+        update_string = f"UPDATE APPOINTMENT SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+        qe.do_query(update_string)
+        qe.commit()
+        qe.disconnect()
+        
+        flash(f'Successfully Confirmed', 'success')
+        return redirect(url_for('staffPage', st_username = st_username))
+
+    return render_template('staffConfirm.html', form = form, st_username = st_username,blood_typeExist = blood_typeExist, blood = blood )
 @app.route("/staffPage/<st_username>/staffReports",methods = ['GET','POST'])
 def staffReports(st_username):
     return render_template('staffReports.html', st_username = st_username)
@@ -390,19 +668,342 @@ def staffReports(st_username):
 def staffProfile(st_username):
     return render_template('staffProfile.html', st_username = st_username)
 
+'''
+_________________________________________________________________________________________________
+            
+                        STAFF PAGE - USED TO VIEW CURRENT LIST OF APPOTMENT
+_________________________________________________________________________________________________
+'''
 
+@app.route("/staffPage/<st_username>", methods = ['GET','POST'])
+def staffPage(st_username):
+    qe.connect()
+    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
+    staffID = staffID[0][0]
+    staffLocation = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
+    staffLocation = staffLocation[0][0]
+    qe.disconnect()
+    qe.connect()
+    appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A WHERE App_Location_ID = {staffLocation} AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  AND A.App_date = CURDATE() AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
+    qe.disconnect()
+    numberedData = []
+    for i in range(len(appointmentData)):
+        temp = []
+        temp.append(i + 1)
+        temp += appointmentData[i]
+        numberedData.append(temp)
+    for elem in numberedData:
+        hour = int(elem[6])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[6] = str(hour) + ":00 " + suffix
+    if(request.method == "POST"):
+        data = request.form
+        if("selectRow" in data):
+            appt_id = data["selectRow"]
+            qe.disconnect()
+            qe.connect()
+            status = qe.do_query(f"SELECT Appt_Status FROM APPOINTMENT WHERE Appt_ID = {appt_id};")
+            status = status[0][0]
+            qe.disconnect()
+            if (status == "Booked"):
+                flash('You Cannot Modify, The Appointment is Not in Process','danger')
+            elif (status == 'Process'):
+                return redirect(url_for('staffPost', st_username = st_username, appt_id = appt_id))
+        if ("confirm" in data):
+            appt_id = data["confirm"]
+            return redirect(url_for('staffConfirm', st_username = st_username, appt_id = appt_id))
+    return render_template('staffPage.html',data = numberedData, st_username = st_username)
+
+@app.route("/staffApptSearch/<st_username>",methods = ['GET','POST'])
+def staffApptSearch(st_username):
+    form = AptSearch()
+    
+    if form.submit.data:
+        date_search = form.date_search.data
+        if date_search != None:
+            return redirect(url_for('staffAptSearchResult',st_username = st_username, date_search = date_search))
+        else:
+            flash(f"Enter a date",'danger')
+    return render_template("staffApptSearch.html",form = form, st_username = st_username)
+
+@app.route("/staffApptSearch/<st_username>/<date_search>",methods = ['GET','POST'])
+def staffAptSearchResult(st_username, date_search):
+    date_search = str(date_search)
+    qe.connect()
+    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
+    staffID = staffID[0][0]
+    staffLocation = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
+    staffLocation = staffLocation[0][0]
+    qe.disconnect()
+    qe.connect()
+    appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A WHERE App_Location_ID = {staffLocation} AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  AND A.App_date = '{date_search}' AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
+    qe.disconnect()
+    numberedData = []
+    for i in range(len(appointmentData)):
+        temp = []
+        temp.append(i + 1)
+        temp += appointmentData[i]
+        numberedData.append(temp)
+    for elem in numberedData:
+        hour = int(elem[6])
+        suffix = 'AM'
+        if(hour >= 12):
+            suffix = 'PM'
+        hour %= 12
+        if(hour == 0):
+            hour = 12
+        elem[6] = str(hour) + ":00 " + suffix
+    if(request.method == "POST"):
+        data = request.form
+        if("selectRow" in data):
+            appt_id = data["selectRow"]
+            qe.disconnect()
+            qe.connect()
+            status = qe.do_query(f"SELECT Appt_Status FROM APPOINTMENT WHERE Appt_ID = {appt_id};")
+            status = status[0][0]
+            qe.disconnect()
+            if (status == "Booked"):
+                flash('You Cannot Modify, The Appointment is Not in Process','danger')
+            elif (status == 'Process'):
+                return redirect(url_for('staffPost', st_username = st_username, appt_id = appt_id))
+        if ("confirm" in data):
+            appt_id = data["confirm"]
+            return redirect(url_for('staffConfirm', st_username = st_username, appt_id = appt_id))
+    return render_template('staffPage.html',data = numberedData, st_username = st_username)
+
+@app.route("/requestedSpecialist/<pt_username>", methods = ['GET','POST'])
+def requestedSpecialist(pt_username):
+    form = requesteSpecialistForm()
+    qe.connect()
+    patientID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}';")
+    patientID = patientID[0][0]
+    qe.disconnect()
+    qe.connect()
+    requestedPendingData = qe.do_query(f"SELECT S.Requested_Date,S.Requested_Reason,S.Requested_Status FROM specialistrequest AS S WHERE Patient_ID = {patientID} AND S.Requested_Status = 'Pending';")
+    qe.disconnect()
+    qe.connect()
+    requestedOldData = qe.do_query(f"SELECT S.Requested_Date,S.Requested_Reason,S.Requested_Status FROM specialistrequest AS S WHERE Patient_ID = {patientID} AND S.Requested_Status != 'Pending';")
+    qe.disconnect()
+    pendingData = []
+    for i in range(len(requestedPendingData)):
+        temp = []
+        temp.append(i + 1)
+        temp += requestedPendingData[i]
+        pendingData.append(temp)
+    oldData = []
+    for i in range(len(requestedOldData)):
+        temp = []
+        temp.append(i + 1)
+        temp += requestedOldData[i]
+        oldData.append(temp)
+    if (form.submit.data):
+        reasonData = form.reason.data
+        qe.connect()
+        patient_ID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}';")
+        patient_ID = patient_ID[0][0];
+        qe.disconnect()
+        qe.connect()
+        query_string = (f"SELECT Patient_ID FROM specialistrequest WHERE Patient_ID={patientID} AND Requested_Status='Pending';")
+        requestedPendingData = len(qe.do_query(query_string))
+        qe.disconnect()
+        if(requestedPendingData >= 1):
+            flash(f'Already Requested Specialist', 'danger')
+            return render_template('requestedSpecialist.html', form = form, pt_username = pt_username, pendingData = pendingData, oldData = oldData)
+        
+        qe.connect()
+        primaryID = qe.do_query(f"SELECT P.Primary_physician_ID FROM patient AS P WHERE P.Patient_ID = {patientID};")
+        qe.disconnect()
+        primaryID = primaryID[0][0]
+        qe.connect()
+        qe.do_query(f"INSERT INTO specialistrequest VALUES(NULL,{primaryID},{patientID},'Pending',NOW(),'{reasonData}');")
+        qe.commit()
+        qe.disconnect()
+        qe.connect()
+        qe.connect()
+        requestedPendingData = qe.do_query(f"SELECT S.Requested_Date,S.Requested_Reason,S.Requested_Status FROM specialistrequest AS S WHERE Patient_ID = '{patientID}' AND S.Requested_Status = 'Pending';")
+        qe.disconnect()
+        qe.connect()
+        requestedOldData = qe.do_query(f"SELECT S.Requested_Date,S.Requested_Reason,S.Requested_Status FROM specialistrequest AS S WHERE Patient_ID = '{patientID}' AND S.Requested_Status != 'Pending';")
+        qe.disconnect()
+        pendingData = []
+        for i in range(len(requestedPendingData)):
+            temp = []
+            temp.append(i + 1)
+            temp += requestedPendingData[i]
+            pendingData.append(temp)
+        oldData = []
+        for i in range(len(requestedOldData)):
+            temp = []
+            temp.append(i + 1)
+            temp += requestedOldData[i]
+            oldData.append(temp)
+        flash(f'Successfully Requested Specialist', 'success')
+    return render_template('requestedSpecialist.html', form = form, pt_username = pt_username, pendingData = pendingData, oldData = oldData)
+
+'''
+_________________________________________________________________________________________________
+            
+                    PATIENT - BLOOD TEST RESULT DOWNLOAD FILE
+_________________________________________________________________________________________________
+'''
+
+@app.route("/<pt_username>/post_appointment/<appt_id>", methods = ['GET','POST'])
+def patientPostAppt(pt_username, appt_id):
+
+    blood_test = True
+    prescript = True
+    post_string = f"SELECT Doctor_Diagnosis, Balance_Due, Blood_Test_ID, Prescription_ID FROM POST_APPOINTMENT WHERE Appointment_ID = {appt_id}"
+    qe.connect()
+    all_post = qe.do_query(post_string)[0]
+    qe.disconnect()
+
+    if all_post[2] is None:
+        blood_test = False
+    if all_post[3] is None:
+        prescript = False
+
+    blood_result = []
+    if blood_test == True:
+        qe.connect()
+        blood_test_query = f"SELECT Blood_test_id FROM BLOOD_TEST_RESULT WHERE Appt_ID = {appt_id}"
+        blood_result = qe.do_query(blood_test_query)[0][0]
+        print(blood_result)
+        qe.disconnect()
+
+    prescript_result = []
+    if prescript == True:
+        qe.connect()
+        prescript_query = f"SELECT Prescription_ID, Drug_Name, Usage_Note, Num_Refill, Patient_ID FROM PRESCRIPTION WHERE Appt_ID = {appt_id}"
+        prescript_result = qe.do_query(prescript_query)[0]
+        qe.disconnect()
+
+    if (request.method == "POST"):
+      data = request.form
+      if ("download" in data):
+        return redirect(url_for("BloodTest",bl_id = blood_result, pt_username = pt_username))
+            
+      if ("request" in data):
+        refill_query = f"UPDATE PRESCRIPTION SET Num_Refill = Num_Refill - 1 WHERE Prescription_ID = {prescript_result[0]}"
+        qe.connect()
+        qe.do_query(refill_query)
+        qe.commit()
+        qe.disconnect()
+        return redirect(url_for('patientPostAppt',pt_username = pt_username, appt_id = appt_id))
+
+    return render_template('patientPostAppt.html', pt_username = pt_username, blood_test = blood_test, prescript = prescript, prescript_result = prescript_result, all_post = all_post)
+
+@app.route("/BloodTest/<pt_username>/<bl_id>", methods = ['GET','POST'])
+def BloodTest(pt_username, bl_id):
+	qe.connect()
+	appointmentData = qe.do_query(f"SELECT White_blood_Cell_Count, Red_blood_Cell_Count, Hemoglobin,Hematocrit, MCV, MCH, RDW, Platelet_Count, Lymphocyte, Monocyte, Cholesterol, Iron, Sodium, Potassium FROM blood_test_result where blood_test_result.Blood_test_id = {bl_id} ;")
+	qe.disconnect()
+	column_names = ['White blood Cell Count', 'Red blood Cell Count', 'Hemoglobin','Hematocrit', 'MCV', 'MCH', 'RDW','Platelet Count', 'Lymphocyte', 'Monocyte', 'Cholesterol', 'Iron', 'Sodium', 'Potassium']
+	si = StringIO()
+	cw = csv.writer(si)
+	cw.writerow(column_names)
+	cw.writerows(appointmentData)
+	output = make_response(si.getvalue())
+	output.headers["Content-disposition"] = "attachment; filename = export.csv"
+	output.headers["Content-type"] = "text/csv"
+	return output
+
+'''
+_________________________________________________________________________________________________
+            
+                        VIEW HEALTH PROFILE
+_________________________________________________________________________________________________
+
+'''
+@app.route("/Patient_Health_Profile/<pt_username>",methods=['GET', 'POST'])
+def Patient_Health_Profile(pt_username):
+    qe.connect()
+    query_string = (f"SELECT BloodType,Height,Weight,Health_Summary \
+        FROM health_profile, log_in\
+        WHERE log_in.UserName = '{pt_username}' \
+        AND log_in.User_ID=health_profile.Health_Profile_ID;")
+
+    result = qe.do_query(query_string);
+    qe.disconnect()
+    data =[]
+
+    for i in result:
+        data.append(list(i))
+
+    return render_template('pt_Health_Profile.html',pt_username=pt_username,data = data)
+
+'''
+_________________________________________________________________________________________________
+            
+                    PATIENT - PATIENT - PATIENT -PATIENT SECTION 
+
+                        PATIENT MAIN PAGE AFTER LOG IN
+_________________________________________________________________________________________________
+'''
+@app.route("/Patient_View/<pt_username>", methods=['GET', 'POST'])
+def Patient_View(pt_username):
+    qe.connect()
+    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{pt_username}';")
+
+    result = qe.do_query(query_string)
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return render_template('Patient_View.html',
+                            first_name =first_name,
+                            email = email,
+                            last_name = last_name,
+                            phone = phone, dob = dob,pt_username = pt_username)
+
+
+'''
+_________________________________________________________________________________________________
+            
+                    MAKE APPOINTMENT
+_________________________________________________________________________________________________
+'''
+
+@app.route("/makeAppointment/<pt_username>", methods = ['GET', 'POST'])
+def makeAppointment(pt_username):
+    qe.disconnect()
+    qe.connect()
+    query_patient = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
+    pt_id = qe.do_query(query_patient)[0][0]
+    query_approval = f"SELECT Approval_Status FROM patient WHERE Patient_ID = {pt_id}"
+    approval = qe.do_query(query_approval)[0][0]
+    approval = (approval == 'T')
+    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM PATIENT AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
+    doctor = qe.do_query(query_doctor)[0]
+    qe.disconnect()
+    form = ApptDoctor()
+    if(form.submitSpecialist.data):
+        return redirect(url_for("specialistType", pt_username = pt_username))
+    elif form.submitDoctor.data:
+        qe.connect()
+        query_string = (f"SELECT P.Primary_physician_ID FROM PATIENT AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
+        dr_id = qe.do_query(query_string)[0][0]
+        qe.disconnect()
+        return redirect(url_for('appointmentloc', pt_username = pt_username, dr_id = dr_id))
+
+    return render_template('apptDoctor.html', form = form, primary = doctor[1], approval = approval, pt_username = pt_username)
 
 @app.route("/specialistType/<pt_username>", methods = ['GET', 'POST'])
 def specialistType(pt_username):
   form = ApptSpecialistType()
-  print("abd: ", form.back.data)
-  print("dgh: ", form.submit.data)
   if(form.back.data):
     return redirect(url_for('makeAppointment', pt_username = pt_username))
   elif(form.submit.data):
     return redirect(url_for("chooseSpecialist", pt_username = pt_username, specialization = form.select.data))
   
-  return render_template("apptSpecialistType.html", form = form)
+  return render_template("apptSpecialistType.html", form = form, pt_username = pt_username)
 
 @app.route("/chooseSpecialist/<pt_username>/<specialization>", methods = ['GET', 'POST'])
 def chooseSpecialist(pt_username, specialization):
@@ -422,7 +1023,7 @@ def chooseSpecialist(pt_username, specialization):
   
   form.select.choices = choices
   
-  print("BACK: ", form.back.data)
+  #print("BACK: ", form.back.data)
   
   if(form.back.data):
     return redirect(url_for("specialistType", pt_username = pt_username))
@@ -430,7 +1031,7 @@ def chooseSpecialist(pt_username, specialization):
     dr_id = form.select.data
     return redirect(url_for("appointmentloc", pt_username = pt_username, dr_id = dr_id))
   
-  return render_template("apptSpecialist.html", form = form)
+  return render_template("apptSpecialist.html", form = form, pt_username = pt_username)
 
 @app.route("/appointmentDate/<pt_username>/<dr_id>", methods = ['GET','POST'])
 def appointmentloc(pt_username, dr_id):
@@ -440,16 +1041,31 @@ def appointmentloc(pt_username, dr_id):
     apt_loc = qe.do_query(query_string)
     qe.disconnect()
     form.select.choices = [(l[0], l[0]) for l in apt_loc]
-    print(form.select.choices)
+    #print(form.select.choices)
     if (form.submit.data):
-        print(form.select.data)
+        #print(form.select.data)
         apt_loc = form.select.data
-        print(apt_loc)
+        #print(apt_loc)
         return redirect(url_for('scheduleDate', pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
     elif (form.back.data):
-        return redirect(url_for('specialistType', pt_username = pt_username))
+        qe.connect()
+        pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+        pt_id = qe.do_query(pt_string)[0][0]
+
+        pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+        pp_id = qe.do_query(pp_string)[0][0]
+        qe.disconnect()
+
+        back_to_primary = True
+        if pp_id != int(dr_id):
+            back_to_primary = False
+        
+        if back_to_primary == True:
+            return redirect(url_for('makeAppointment',pt_username = pt_username))
+        elif back_to_primary == False:
+            return redirect(url_for('specialistType', pt_username = pt_username))
     
-    return render_template('appointmentLocation.html', form = form)
+    return render_template('appointmentLocation.html', form = form, pt_username = pt_username)
 
 @app.route("/appointmentDate/<pt_username>/<dr_id>/<apt_loc>", methods = ['GET', 'POST'])
 def scheduleDate(pt_username, dr_id, apt_loc):
@@ -458,10 +1074,6 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   query_loc = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(query_loc)[0][0]
   query_string = f"SELECT D.Working_date FROM APPOINTMENT AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
-#   query_appointments = '''
-#     SELECT App_date, App_hour, doctor.Doctor_ID, Working_date
-#     FROM appointment, doctor, doctor_office
-#     WHERE Appt_Status != 'Completed' AND With_Doctor = doctor.Doctor_ID
   already_string = f"SELECT A.App_date FROM APPOINTMENT AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
   already = qe.do_query(already_string)
 
@@ -470,7 +1082,7 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   qe.disconnect()
 
   workingDate = appts[0][0]
-  print("working date: ",workingDate)
+  #print("working date: ",workingDate)
   weekday = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su']
   
   dates = {}  # Stores valid dates - pre-existing/booked appointments will set days to False
@@ -478,11 +1090,6 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   ordToday = date.today().toordinal()
   for ordDay in range(ordToday, ordToday + 30):
     dates[date.fromordinal(ordDay)] = True
-  
-#   for appt in appts:
-#     day = appt[0]
-#     if(day in dates):
-#       dates[day] = False
 
   for elem in dates:
     if(weekday[date.weekday(elem)] in workingDate):
@@ -492,7 +1099,7 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   if form.submit.data:
     apt_date = form.radio.data
     Datepick = True
-    print(already)
+    #print(already)
     if already: 
         for elem in already:
             if str(elem[0]) == apt_date:
@@ -503,8 +1110,10 @@ def scheduleDate(pt_username, dr_id, apt_loc):
         flash(f'You Already Have Appointment on this day. Please Choose Another', 'danger')
     else:
         return redirect(url_for('scheduleHour', pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc, apt_date = apt_date))
-  
-  return render_template('apptDate.html', form = form, titleText = "Choose Date")
+  elif form.back.data:
+      return redirect(url_for('appointmentloc',pt_username = pt_username, dr_id = dr_id))
+
+  return render_template('apptDate.html', form = form, titleText = "Choose Date", pt_username = pt_username)
 
 
 @app.route("/appointmentHour/<pt_username>/<dr_id>/<apt_loc>/<apt_date>", methods = ['GET', 'POST'])
@@ -559,261 +1168,57 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
           apt_type = "General"
           if pp_id != int(dr_id):
               apt_type = "Specialist"
-          print(apt_type)
+          #print(apt_type)
           insert_string = f"INSERT INTO APPOINTMENT(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
-          #flash(f'Appointment is Booked', 'success')
-          return redirect(url_for('Patient_View', pt_username = pt_username))
-        
+          if apt_type == "Specialist":
+            approval_string = f"UPDATE PATIENT SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+            qe.connect()
+            qe.do_query(approval_string)
+            qe.commit()
+            qe.disconnect()
+
+          flash(f'You Successfully Make An Appointment','success')
+          return redirect(url_for('makeAppointment', pt_username = pt_username))
+
   elif form.back.data:
     return redirect(url_for('scheduleDate',pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
   
   return render_template('apptHour.html', form = form, titleText = "Choose Hour", no_hour = no_hour, pt_username = pt_username)
 
-# @app.route("/staffReports")
-# def staffReports():
-#     return render_template('staffReports.html')
 
 '''
 _________________________________________________________________________________________________
             
-                        LOG IN 
+                        Modify current appointment 
 _________________________________________________________________________________________________
+
 '''
 
-@app.route("/login", methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        username = form.user.data
-        password = form.password.data
-        if login_check.login_check(username, password) == True:
-
-            if login_check.account_type(username, password) == "patient":
-                # flash(f'You Successfully Log in','success')
-                return redirect(url_for('Patient_View',pt_username = username))
-
-            elif login_check.account_type(username, password) == "doctor":
-                # flash(f'You Successfully Log in','success')
-                return redirect(url_for('Doctor_View',dt_username = username))
-
-            elif login_check.account_type(username, password) == "staff":
-                # flash(f'You Successfully Log in','success')
-                return redirect(url_for('Staff_View',st_username = username))
-        else:
-            flash('Invalid Account, Check Your Username and Password', 'danger')
-
-    return render_template('login.html', title='Login', form=form)
-
-'''
-_________________________________________________________________________________________________
-            
-                        DOCTOR - DOCTOR - SECTION HERE. 
-_________________________________________________________________________________________________
-'''
-@app.route("/Doctor_View/<dt_username>", methods=['GET', 'POST'])
-def Doctor_View(dt_username):
+@app.route("/modify_current_appointment/<app_id>",methods=['GET', 'POST'])
+def modify_current_appointment(app_id):
     qe.connect()
-    query_string = (f"SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
-                        FROM general_info, log_in \
-                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{dt_username}';")
-
-    result = qe.do_query(query_string)
-    first_name = result[0][0]
-    email = result[0][1]
-    last_name = result[0][2]
-    phone = result[0][3]
-    dob = result[0][4]
-    return render_template('Doctor_View.html',
-                            first_name =first_name,
-                            email = email,
-                            last_name = last_name,
-                            phone = phone, dob = dob,dt_username = dt_username)
-
-
-'''
-_________________________________________________________________________________________________
-            
-                        DOCTOR - VIEW TODAY  APPONTMENT
-_________________________________________________________________________________________________
-'''
-@app.route("/doc_today_appointment/<dt_username>",methods=['GET', 'POST'])
-def doc_today_appointment(dt_username):
-
-    qe.connect()
-    query_string = (f"SELECT Appt_ID,App_date,App_hour,First_Name,Office_Name,Appt_Status \
-        FROM appointment, office,log_in,general_info \
-        WHERE  log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
-        AND log_in.User_ID = appointment.With_Doctor \
-        AND DATE(appointment.App_date) = CURDATE() \
-        AND appointment.Patient_ID = general_info.Hospital_ID;")
-
-
-    result = qe.do_query(query_string)
+    query_string = (f"UPDATE appointment \
+        SET Appt_Status  = 'Cancelled' \
+        WHERE  Appt_ID =  {app_id};")
+    qe.do_query(query_string)
+    qe.commit()
     qe.disconnect()
 
-    data = []
-    for i in result:
-        data.append(list(i))
 
-    for elem in data:
-        hour = int(elem[2])
-        suffix = 'AM'
-        if(hour >= 12):
-            suffix = 'PM'
-        hour %= 12
-        if(hour == 0):
-            hour = 12
-        elem[2] = str(hour) + ":00 " + suffix
-
-    return render_template("doc_today_appointment.html",
-                            data = data, dt_username=dt_username)
-
-
-'''
-_________________________________________________________________________________________________
-            
-                        STAFF - STAFF - STAFF SECTION HERE. 
-_________________________________________________________________________________________________
-'''
-@app.route("/Staff_View/<st_username>", methods=['GET', 'POST'])
-def Staff_View(st_username):
     qe.connect()
-    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
-                        FROM general_info, log_in \
-                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{st_username}';")
+    query_string2 = (f"SELECT UserName \
+        FROM appointment,log_in \
+        WHERE   Appt_ID =  {app_id} AND appointment.Patient_ID = log_in.User_ID")
 
-    result = qe.do_query(query_string);
-    first_name = result[0][0]
-    email = result[0][1]
-    last_name = result[0][2]
-    phone = result[0][3]
-    dob = result[0][4]
-    return render_template('Staff_View.html',
-                            first_name =first_name,
-                            email = email,
-                            last_name = last_name,
-                            phone = phone, dob = dob,st_username = st_username)
+    result = qe.do_query(query_string2)
 
-'''
-_________________________________________________________________________________________________
-            
-                        STAFF PAGE - USED TO VIEW CURRENT LIST OF APPOTMENT
-_________________________________________________________________________________________________
-'''
-
-@app.route("/staffPage/<st_username>", methods = ['GET','POST'])
-def staffPage(st_username):
-    qe.connect()
-    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
-    staffID = staffID[0][0]
-    staffLocation = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
-    staffLocation = staffLocation[0][0]
+    pt_username = result[0][0]
     qe.disconnect()
-    qe.connect()
-    appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A WHERE App_Location_ID = {staffLocation} AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
-    qe.disconnect()
-    numberedData = []
-    for i in range(len(appointmentData)):
-        temp = []
-        temp.append(i + 1)
-        temp += appointmentData[i]
-        numberedData.append(temp)
-    print(type(numberedData[0][2]))
-    for elem in numberedData:
-        hour = int(elem[6])
-        suffix = 'AM'
-        if(hour >= 12):
-            suffix = 'PM'
-        hour %= 12
-        if(hour == 0):
-            hour = 12
-        elem[6] = str(hour) + ":00 " + suffix
-    if(request.method == "POST"):
-        data = request.form
-        if("selectRow" in data):
-            appt_id = data["selectRow"]
-            qe.disconnect()
-            qe.connect()
-            status = qe.do_query(f"SELECT Appt_Status FROM APPOINTMENT WHERE Appt_ID = {appt_id};")
-            status = status[0][0]
-            qe.disconnect()
-            if (status == "Booked"):
-                flash('You Cannot Modify, The Appointment is Not in Process','danger')
-            elif (status == 'Process'):
-                return redirect(url_for('staffPost', st_username = st_username, appt_id = appt_id))
-        if ("confirm" in data):
-            appt_id = data["confirm"]
-            update_string = f"UPDATE APPOINTMENT SET Confirm_By = {staffID}, Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
-            qe.connect()
-            qe.do_query(update_string)
-            qe.commit()
-            qe.disconnect()
-            flash(f'Successfully Confirmed', 'success')
-            return redirect(url_for('staffPage', st_username = st_username))
-    return render_template('staffPage.html',data = numberedData, st_username = st_username)
-
-'''
-_________________________________________________________________________________________________
-            
-                    PATIENT - PATIENT - PATIENT -PATIENT SECTION 
-
-                        PATIENT MAIN PAGE AFTER LOG IN
-_________________________________________________________________________________________________
-'''
-@app.route("/Patient_View/<pt_username>", methods=['GET', 'POST'])
-def Patient_View(pt_username):
-    qe.connect()
-    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
-                        FROM general_info, log_in \
-                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{pt_username}';")
-
-    result = qe.do_query(query_string);
-    first_name = result[0][0]
-    email = result[0][1]
-    last_name = result[0][2]
-    phone = result[0][3]
-    dob = result[0][4]
-    return render_template('Patient_View.html',
-                            first_name =first_name,
-                            email = email,
-                            last_name = last_name,
-                            phone = phone, dob = dob,pt_username = pt_username)
-
-
-'''
-_________________________________________________________________________________________________
-            
-                    MAKE APPOINTMENT
-_________________________________________________________________________________________________
-'''
-
-@app.route("/makeAppointment/<pt_username>", methods = ['GET', 'POST'])
-def makeAppointment(pt_username):
-    qe.disconnect()
-    qe.connect()
-    query_patient = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
-    pt_id = qe.do_query(query_patient)[0][0]
-    query_approval = f"SELECT Approval_Status FROM patient WHERE Patient_ID = {pt_id}"
-    approval = qe.do_query(query_approval)[0][0]
-    approval = (approval == 'T')
-    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM PATIENT AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
-    doctor = qe.do_query(query_doctor)[0]
-    qe.disconnect()
-    form = ApptDoctor()
-    if(form.submitSpecialist.data):
-        return redirect(url_for("specialistType", pt_username = pt_username))
-    elif form.submitDoctor.data:
-        qe.connect()
-        query_string = (f"SELECT P.Primary_physician_ID FROM PATIENT AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
-        dr_id = qe.do_query(query_string)[0][0]
-        qe.disconnect()
-        return redirect(url_for('appointmentloc', pt_username = pt_username, dr_id = dr_id))
-
-    return render_template('apptDoctor.html', form = form, primary = doctor[1], approval = approval)
-
+    
+    return redirect(url_for('makeAppointment',pt_username=pt_username))
 
 '''
 _________________________________________________________________________________________________
@@ -821,28 +1226,31 @@ ________________________________________________________________________________
                     PATIENT: VIEW CURRENT APPOINTMENT
 _________________________________________________________________________________________________
 '''
+
 @app.route("/pt_View_Current_Appointment/<pt_username>",methods=['GET', 'POST'])
 def pt_View_Current_Appointment(pt_username):
     #BOOKED RESULT 
     qe.connect()
-    query_string_booked = (f"SELECT App_Type,App_date,App_hour,With_Doctor,Appt_Status, Office_Name, Appt_ID \
-        FROM appointment, log_in, office \
-        WHERE log_in.UserName = '{pt_username}' \
-        AND log_in.User_ID = appointment.Patient_ID \
-        AND office.Office_ID =  appointment.App_Location_ID\
-        AND appointment.Appt_Status = 'Booked';")
+    query_string_booked = (f"SELECT A.App_Type,A.App_date,A.App_hour,G.Last_Name,A.Appt_Status, O.Office_Name, A.Appt_ID \
+        FROM appointment as A, log_in as L, office as O, general_info as G \
+        WHERE L.UserName = '{pt_username}' \
+        AND L.User_ID = A.Patient_ID \
+        AND O.Office_ID =  A.App_Location_ID\
+        AND A.With_Doctor = G.Hospital_ID\
+        AND A.Appt_Status = 'Booked';")
 
     booked_result = qe.do_query(query_string_booked)
     qe.disconnect()
 
     #COMPLETED RESULT 
     qe.connect()
-    query_string_completed = (f"SELECT App_Type,App_date,App_hour,With_Doctor,Appt_Status, Office_Name, Appt_ID \
-        FROM appointment, log_in, office \
-        WHERE log_in.UserName = '{pt_username}' \
-        AND log_in.User_ID = appointment.Patient_ID \
-        AND office.Office_ID =  appointment.App_Location_ID\
-        AND appointment.Appt_Status <> 'Booked';")
+    query_string_completed = (f"SELECT A.App_Type,A.App_date,A.App_hour,G.Last_Name,A.Appt_Status, O.Office_Name, A.Appt_ID \
+        FROM appointment as A, log_in as L, office as O, general_info as G\
+        WHERE L.UserName = '{pt_username}' \
+        AND L.User_ID = A.Patient_ID \
+        AND O.Office_ID =  A.App_Location_ID\
+        AND A.With_Doctor = G.Hospital_ID\
+        AND A.Appt_Status = 'Completed' ;")
 
     completed_result= qe.do_query(query_string_completed)
     qe.disconnect()
@@ -858,7 +1266,7 @@ def pt_View_Current_Appointment(pt_username):
         completed_data.append(list(i))
 
     for elem in booked_data:
-        print(f"current appt is {elem[6]}")
+        #print(f"current appt is {elem[6]}")
         hour = int(elem[2])
         suffix = 'AM'
         if(hour >= 12):
@@ -878,6 +1286,13 @@ def pt_View_Current_Appointment(pt_username):
             hour = 12
         elem[2] = str(hour) + ":00 " + suffix
 
+    if (request.method == 'POST'):
+        data = request.form
+        if ("selectRow" in data):
+            appt_id = data["selectRow"]
+            print(appt_id)
+            
+            return redirect(url_for('patientPostAppt',pt_username = pt_username, appt_id = appt_id))
 
     return render_template("pt_View_Current_Appointment.html",
                             booked_data = booked_data,completed_data=completed_data,pt_username=pt_username)
@@ -896,7 +1311,7 @@ def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
     query_string = (f"SELECT UserName \
         FROM general_info, log_in \
         WHERE general_info.Email = '{P_Email}' AND Hospital_ID = User_ID;")
-    result = qe.do_query(query_string);
+    result = qe.do_query(query_string)
     username = result[0][0]
 
     #Patient 
@@ -927,7 +1342,7 @@ ________________________________________________________________________________
 def cancel_appointment(app_id):
     qe.connect()
     query_string = (f"UPDATE appointment SET Appt_Status = 'Cancelled' WHERE Appt_ID = {app_id};")
-    qe.do_query(query_string);
+    qe.do_query(query_string)
     qe.commit()
 
     #get Fname and Email
@@ -935,7 +1350,7 @@ def cancel_appointment(app_id):
         FROM appointment AS  A,  general_info  AS P, general_info  AS D\
         WHERE  Appt_ID  = {app_id}  AND A.With_Doctor  =  D.Hospital_ID  AND  A.Patient_ID  =  P.Hospital_ID;")
 
-    result = qe.do_query(get_info);
+    result = qe.do_query(get_info)
     doctor_email = result[0][0]
     doctor_fname = result[0][1]
     patient_email = result[0][2]
@@ -947,34 +1362,7 @@ def cancel_appointment(app_id):
     return redirect(url_for('SendEmail',D_Fname = doctor_fname,D_Email = doctor_email,
         P_Fname = patient_fname,P_Email = patient_email,Type = Type))
 
-'''
-_________________________________________________________________________________________________
-            
-                    MODIFY CURRENT APPOINTMENT
-_________________________________________________________________________________________________
-'''
-@app.route("/modify_current_appointment/<app_id>",methods=['GET', 'POST'])
-def modify_current_appointment(app_id):
-    qe.connect()
-    query_string = (f"UPDATE appointment \
-        SET Appt_Status  = 'Cancelled' \
-        WHERE  Appt_ID =  {app_id};")
-    qe.do_query(query_string);
-    qe.commit()
-    qe.disconnect()
 
-
-    qe.connect()
-    query_string2 = (f"SELECT UserName \
-        FROM appointment,log_in \
-        WHERE   Appt_ID =  {app_id} AND appointment.Patient_ID = log_in.User_ID")
-
-    result = qe.do_query(query_string2);
-
-    pt_username = result[0][0]
-    qe.disconnect()
-    
-    return redirect(url_for('makeAppointment',pt_username=pt_username))
 
 if __name__ == '__main__':
     app.run(debug=True)

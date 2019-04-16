@@ -10,10 +10,10 @@ def login_check(username, password):
   count = check_acc[0][0]
   qe.disconnect()
   if count == 1:
-    print("I am in")
+    #print("I am in")
     return True
   else:
-    print("wrong account")
+    #print("wrong account")
     return False
 
 def account_type(username, password):
@@ -34,5 +34,5 @@ def get_login(username, password):
   qe.connect()
   check_acc = qe.do_query("select User_ID from log_in where UserName = '" + username + "' and Password_hash = md5('"+ password + "')" )
   qe.disconnect()
-  print("check_acc:", check_acc[0][0])
+  #print("check_acc:", check_acc[0][0])
   return check_acc[0][0]

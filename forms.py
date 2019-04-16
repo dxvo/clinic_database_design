@@ -151,6 +151,10 @@ class PatientForm(FlaskForm):
         loc.append(elem)
     officelocation = SelectField('Office Location You Want', choices = [(l, l) for l in loc] ,validators=[DataRequired()])
     next_submit = SubmitField('Next')
+    
+class requesteSpecialistForm(FlaskForm):
+    reason = StringField('Reason For Request', validators=[DataRequired(),Length(max = 100)])
+    submit = SubmitField('Request Specialist')
 
 class PriPhys(FlaskForm):
     pphys_pick = SelectField('Pick Primary Physician', choices = [], validators=[DataRequired()])
@@ -171,6 +175,17 @@ class StaffPostForm(FlaskForm):
     balance = FloatField('Balance', validators=[InputRequired()])
     submit = SubmitField('Submit')
     blood_prescript = MultiCheckboxField(choices=[('Tp','Prescription'),('Tb','Blood Test Result')])
+
+class StaffPostHealthProfile(FlaskForm):
+    bloodtype = StringField('Blood Type')
+    health_summary = StringField('Health Summary', validators=[Length(min=0,max=100)])
+    height = FloatField('Height', validators=[NumberRange(min = 1, max = 300)])
+    weigth = FloatField('Weight', validators=[NumberRange(min = 1, max = 1000)])
+    confirm = SubmitField('Confirm')
+
+class AptSearch(FlaskForm):
+    date_search = DateField('Date')
+    submit = SubmitField('Search')
 
 class PostBlood(FlaskForm):
     white_blood = FloatField('White Blood Cell Count', validators=[InputRequired()])

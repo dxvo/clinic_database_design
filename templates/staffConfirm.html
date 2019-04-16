@@ -46,50 +46,81 @@
         </div>
       </nav>
     </header>
-
     <main role="main" class="container">
-      <div class="form-container">
-      <h2 style = "color: white;">Post Appointment</h2>
-        <form method="POST" action="" style = "color: white;">
+      <h2 style = "color: white">Check In Appointment</h2>
+        <form method="POST" action="" style = "color: white">
             {{ form.hidden_tag() }}
-                <div class="form-container">
-                    {{ form.doctorDiagnosis.label(class="form-control-label") }}
-                    {% if form.doctorDiagnosis.errors %}
-                        {{ form.doctorDiagnosis(class="form-control form-control-lg is-invalid") }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4"></legend>
+                <div class="form-group">
+                    {{ form.health_summary.label(class="form-control-label") }}
+                    {% if form.health_summary.errors %}
+                        {{ form.health_summary(class="form-control form-control-lg is-invalid") }}
                         <div class="invalid-feedback">
-                            {% for error in form.doctorDiagnosis.errors %}
+                            {% for error in form.health_summary.errors %}
                                 <span>{{ error }}</span>
                             {% endfor %}
                         </div>
                     {% else %}
-                        {{ form.doctorDiagnosis(class="form-control form-control-lg") }}
+                        {{ form.health_summary(class="form-control form-control-lg") }}
                     {% endif %}
                 </div>
-                <hr>
+
                 <div class = "form-row">
-                  <div class="form-container mycontent-left">
-                      {{ form.balance.label(class="form-control-label") }}
-                      {% if form.balance.errors %}
-                          {{ form.balance(class="form-control form-control-lg is-invalid") }}
+                  <div class="form-group">
+                      {{ form.height.label(class="form-control-label") }}
+                      {% if form.height.errors %}
+                          {{ form.height(class="form-control form-control-lg is-invalid") }}
                           <div class="invalid-feedback">
-                              {% for error in form.balance.errors %}
+                              {% for error in form.height.errors %}
                                   <span>{{ error }}</span>
                               {% endfor %}
                           </div>
                       {% else %}
-                          {{ form.balance(class="form-control form-control-lg") }}
+                          {{ form.height(class="form-control form-control-lg") }}
                       {% endif %}
                   </div>
-                  <div class = "form-container mycontent-right">
-                      Check If Patient Has Prescription or Blood Test Result
-                      {{ form.blood_prescript(class="form-control form-control-lg") }}
+
+                  <div class="form-group">
+                        {{ form.weigth.label(class="form-control-label") }}
+                        {% if form.weigth.errors %}
+                            {{ form.weigth(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.weigth.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.weigth(class="form-control form-control-lg") }}
+                        {% endif %}
                   </div>
+
+                  {% if blood_typeExist == False: %}
+                  <div class = "form-group">
+                        {{ form.bloodtype.label(class="form-control-label") }}
+                        {% if form.bloodtype.errors %}
+                            {{ form.bloodtype(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.bloodtype.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.bloodtype(class="form-control form-control-lg") }}
+                        {% endif %}
+                  </div>
+                  {% else: %}
+                  <div class = "form-group">
+                        Blood Type: {{blood}}
+                  </div>
+                  {% endif %}
                 </div>
-            <div class="form-container">
-                {{ form.submit(class="btn btn-outline-info") }}
+
+            </fieldset>
+            <div class="form-group">
+                {{ form.confirm(class="btn btn-outline-info") }}
             </div>
         </form>
-      </div>
     </main>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>

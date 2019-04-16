@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Medical Clinic</title>
+</head>
+<body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username = pt_username)}}">
+              <strong> Home Profile</strong>
+              </a>
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
+                    </div>
+              </li>
+
+            </div>
+
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+<main role="main" class="container">
+        <div class="col-md-7">
+    <div class="card" style="width: 60% background-color:gray;">
+      <div class="form-container">
+        <p class="title"><h3 style ="text-align: center;"><strong>Post Appointment</strong></h3></p>
+        <hr>
+        <p>Doctor Diagnosis: {{all_post[0]}}</p>
+        <p>Balance Due: ${{all_post[1]}}</p>
+      </div>
+
+      {% if prescript == True: %}
+      <div class="form-container">
+        <hr>
+        <p class="title"><strong><em><u>Prescription Details:</u></em></strong></p>
+        <p>Drug: {{prescript_result[1]}}</p>
+        <p>Doctor Note: {{prescript_result[2]}}</p>
+        <p>Number of Refill: {{prescript_result[3]}}</p>
+      </div>
+      <hr>
+      {% if prescript_result[3] > 0: %}
+      <div>
+            <form action = "" method = "POST"><strong> Order Prescription</strong>
+                <button class = "btn btn-primary btn-sm" type = "submit" name = "request" value = "request" onclick="alert(' Your Order is Sent')">
+                Request
+              </button>
+            </form>
+            {% else: %}
+            <p><strong>You Do not Have Permission to Request More Prescription</strong></p>
+            {% endif %}
+      </div>
+      {% endif %}
+
+      {% if blood_test == True: %}
+      <div>
+            <form action = "" method = "POST"><strong>Download Blood Test Result File</strong>
+                <button class = "btn btn-primary btn-sm" type = "submit" name = "download" value = "download">Download</button>
+            </form>
+      </div>
+      
+      {% endif %}
+    </div>
+    </div>
+  </div>
+</main>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
