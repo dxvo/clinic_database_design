@@ -14,9 +14,9 @@ class QueryEngine:
       self.setup_default()
   
   def setup_default(self):
-    self.host = "us-cdbr-iron-east-03.cleardb.net"
+    self.host = "us-mm-dca-720690c860c5.g5.cleardb.net"
     self.user = "b872fa14b85c86"
-    self.password = "bfbc7ff3faa0229"
+    self.password = "d71a956abec844f"
     self.database = "heroku_5c85c34484343c5"
   
   def connect(self):
