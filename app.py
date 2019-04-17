@@ -20,7 +20,7 @@ qe.setup_default()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-
+app.config['CLEARDB_DATABASE_URL'] = 'mysql://b872fa14b85c86:26b0b719@us-cdbr-iron-east-03.cleardb.net/heroku_5c85c34484343c5?reconnect=true'
 
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
