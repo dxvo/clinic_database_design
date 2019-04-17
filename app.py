@@ -1340,7 +1340,7 @@ def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
 
     mail.send(msg1)
     mail.send(msg2)
-    return redirect(url_for('Patient_View',pt_username=username))
+    return redirect(url_for('pt_View_Current_Appointment',pt_username=username))
 
 '''
 _________________________________________________________________________________________________
