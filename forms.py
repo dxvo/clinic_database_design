@@ -109,7 +109,7 @@ class DoctorForm(FlaskForm):
     query_strings = ("Select Office_Name from office")
     qe.connect()
     option_loc = qe.do_query(query_strings)
-    qe.disconnect
+    qe.disconnect()
     loc = []   
     for elem in option_loc:
         elem = elem[0]
@@ -129,7 +129,7 @@ class AddLoc(FlaskForm):
     query_strings = ("Select Office_Name from office")
     qe.connect()
     option_loc = qe.do_query(query_strings)
-    qe.disconnect
+    qe.disconnect()
     loc = []   
     for elem in option_loc:
         elem = elem[0]
@@ -144,7 +144,7 @@ class PatientForm(FlaskForm):
     query_string = ("Select Office_Name from office")
     qe.connect()
     option_loc = qe.do_query(query_string)
-    qe.disconnect
+    qe.disconnect()
     loc = []   
     for elem in option_loc:
         elem = elem[0]
