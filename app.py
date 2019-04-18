@@ -694,7 +694,7 @@ def staffProfile(st_username):
 '''
 _________________________________________________________________________________________________
             
-                        STAFF PAGE - USED TO VIEW CURRENT LIST OF APPOTMENT
+                        STAFF PAGE - USED TO VIEW CURRENT LIST OF TODAY APPOTMENT
 _________________________________________________________________________________________________
 '''
 
@@ -745,6 +745,7 @@ def staffPage(st_username):
             appt_id = data["confirm"]
             return redirect(url_for('staffConfirm', st_username = st_username, appt_id = appt_id))
     return render_template('staffPage.html',data = numberedData, st_username = st_username)
+
 
 @app.route("/staffApptSearch/<st_username>",methods = ['GET','POST'])
 def staffApptSearch(st_username):
@@ -1362,7 +1363,7 @@ def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
 
     mail.send(msg1)
     mail.send(msg2)
-    return redirect(url_for('Patient_View',pt_username=username))
+    return redirect(url_for('pt_View_Current_Appointment',pt_username=username))
 
 '''
 _________________________________________________________________________________________________
