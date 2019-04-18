@@ -40,22 +40,21 @@
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
+        
             <div class="navbar-nav mr-auto">
-              
-              <a class="nav-item nav-link" href="{{ url_for('staffPage',st_username = st_username)}}">
-                  <strong>Today Appointment</strong>
-                </a>
-              <a class="nav-item nav-link" href="{{ url_for('staffApptSearch',st_username = st_username) }}">
-                  <strong>Look Up Appointment</strong>
-                </a>
-              <a class="nav-item nav-link" href="{{ url_for('staffMakeAppt', st_username = st_username)}}">
-                <strong>Make Appointment </strong>
-              </a>
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('staffPage',st_username = st_username)}}">Today Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('staffApptSearch',st_username = st_username)}}">Look Up Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('staffMakeAppt', st_username = st_username)}}">Call In Appointment</a>
+                    </div>
+              </li>
+                <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                <strong>Main Profile</strong></a>
             </div>
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
-                <strong>Main Profile</strong>
-              </a>
               <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
             </div>
           </div>

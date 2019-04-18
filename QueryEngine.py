@@ -19,7 +19,6 @@ class QueryEngine:
     self.password = "Bank5you"
     self.database = "medical_clinic"
   
-  
   def connect(self):
     if(self.connected):
       return

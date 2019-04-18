@@ -83,7 +83,7 @@ def primary_phys_pick(office, pt_username):
     qe.disconnect()
     office_id = office_id[0][0]
     #print(office_id)
-    query_string = (f"SELECT Hospital_ID, Last_Name FROM general_info, doctor_office WHERE doctor_office.Office_ID = {office_id} AND doctor_office.Doctor_ID = doctor_office.Hospital_ID")
+    query_string = (f"SELECT Hospital_ID, Last_Name FROM general_info, doctor_office WHERE doctor_office.Office_ID = {office_id} AND doctor_office.Doctor_ID = general_info.Hospital_ID")
     qe.connect()
     dr_lname = qe.do_query(query_string)
     qe.disconnect()
@@ -325,9 +325,8 @@ def doc_today_appointment(dt_username):
         FROM appointment, office,log_in,general_info \
         WHERE log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
         AND log_in.User_ID = appointment.With_Doctor \
-        AND DATE(appointment.App_date) = CURDATE() \
+        AND DATE(appointment.App_date) = DATE_FORMAT((CURDATE()-INTERVAL 5 DAY_HOUR),'%Y-%m-%d') \
         AND appointment.Patient_ID = general_info.Hospital_ID;")
-
 
     result = qe.do_query(query_string)
     qe.disconnect()
@@ -652,7 +651,7 @@ def staffConfirm(st_username, appt_id):
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
-            update_string = f"UPDATE appointment SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+            update_string = f"UPDATE appointment SET Confirm_By = {staffID}  WHERE Appt_ID = {appt_id}"
             qe.do_query(update_string)
             qe.commit()
             qe.disconnect()
@@ -668,7 +667,7 @@ def staffConfirm(st_username, appt_id):
         qe.connect()
         qe.do_query(update_string)
         qe.commit()
-        update_string = f"UPDATE appointment SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+        update_string = f"UPDATE appointment SET Confirm_By = {staffID} WHERE Appt_ID = {appt_id}"
         qe.do_query(update_string)
         qe.commit()
         qe.disconnect()
@@ -708,7 +707,11 @@ def staffPage(st_username):
     staffLocation = staffLocation[0][0]
     qe.disconnect()
     qe.connect()
-    appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A WHERE App_Location_ID = {staffLocation} AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  AND A.App_date = CURDATE() AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
+    appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A \
+                                        WHERE App_Location_ID = {staffLocation} \
+                                        AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  \
+                                        AND A.App_date = DATE_FORMAT((CURDATE()-INTERVAL 5 DAY_HOUR),'%Y-%m-%d') \
+                                        AND (Appt_Status = 'Booked');")
     qe.disconnect()
     numberedData = []
     for i in range(len(appointmentData)):
@@ -1101,15 +1104,17 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   qe.connect()
   query_loc = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(query_loc)[0][0]
-  query_string = f"SELECT D.Working_date FROM appointment AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
+  print(loc_id)
+  query_string = f"SELECT D.Working_date FROM doctor_office AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
   already_string = f"SELECT A.App_date FROM appointment AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
   already = qe.do_query(already_string)
-
+  
   appts = qe.do_query(query_string)  
     
   qe.disconnect()
-
+  print(appts)
   workingDate = appts[0][0]
+  print(workingDate)
   #print("working date: ",workingDate)
   weekday = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su']
   
