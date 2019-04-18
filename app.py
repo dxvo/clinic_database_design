@@ -20,7 +20,7 @@ qe.setup_default()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '5791628bb0b13ce0c676dfde280ba245'
-app.config['CLEARDB_DATABASE_URL'] = 'mysql://b872fa14b85c86:26b0b719@us-cdbr-iron-east-03.cleardb.net/heroku_5c85c34484343c5?reconnect=true'
+
 
 mail= Mail(app)
 app.config['MAIL_SERVER']='smtp.gmail.com'
@@ -77,13 +77,13 @@ def insurance(pt_username):
 @app.route("/patient_reg/<pt_username>/<office>", methods = ['GET','POST'])
 def primary_phys_pick(office, pt_username):
     form = PriPhys()
-    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office}'")
+    query_string = (f"SELECT Office_ID FROM office WHERE Office_Name = '{office}'")
     qe.connect()
     office_id = qe.do_query(query_string)
     qe.disconnect()
     office_id = office_id[0][0]
     #print(office_id)
-    query_string = (f"SELECT Hospital_ID, Last_Name FROM GENERAL_INFO, DOCTOR_OFFICE WHERE DOCTOR_OFFICE.Office_ID = {office_id} AND DOCTOR_OFFICE.Doctor_ID = GENERAL_INFO.Hospital_ID")
+    query_string = (f"SELECT Hospital_ID, Last_Name FROM general_info, doctor_office WHERE doctor_office.Office_ID = {office_id} AND doctor_office.Doctor_ID = doctor_office.Hospital_ID")
     qe.connect()
     dr_lname = qe.do_query(query_string)
     qe.disconnect()
@@ -323,7 +323,7 @@ def doc_today_appointment(dt_username):
     qe.connect()
     query_string = (f"SELECT Appt_ID,App_date,App_hour,First_Name,Office_Name,Appt_Status \
         FROM appointment, office,log_in,general_info \
-        WHERE  log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
+        WHERE log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
         AND log_in.User_ID = appointment.With_Doctor \
         AND DATE(appointment.App_date) = CURDATE() \
         AND appointment.Patient_ID = general_info.Hospital_ID;")
@@ -346,10 +346,27 @@ def doc_today_appointment(dt_username):
         if(hour == 0):
             hour = 12
         elem[2] = str(hour) + ":00 " + suffix
+    
+    if (request.method == "POST"):
+        data = request.form
+        if ("view" in data):
+            appt_id = data["view"]
+            return redirect(url_for('PtHealthProfile', appt_id = appt_id, dt_username = dt_username))
 
     return render_template("doc_today_appointment.html",
                             data = data, dt_username=dt_username)
 
+@app.route("/doc_today_appointment/<dt_username>/<appt_id>",methods = ['GET','POST'])
+def PtHealthProfile(dt_username, appt_id):
+    query_string = f"SELECT H.BloodType, H.Height, H.Weight, H.Health_Summary FROM health_profile AS H, appointment AS A WHERE A.Appt_ID = {appt_id} AND A.Patient_ID = H.Health_Profile_ID"
+    qe.connect()
+    health_profile = qe.do_query(query_string)
+    qe.disconnect()
+    if (request.method == "POST"):
+        data = request.form
+        if ("back" in data):
+            return redirect(url_for("doc_today_appointment", dt_username = dt_username))
+    return render_template("PtHealthProfile.html",dt_username = dt_username, hprofile = health_profile)
 
 @app.route("/Doctor_View/<dt_username>/specialistApproval",methods=['GET','POST'])
 def specialistApproval(dt_username):
@@ -514,21 +531,21 @@ def staffPostBlood(st_username, appt_id):
         sodium = form.sodium.data
         potassium = form.potassium.data
         if form.submit.data:
-            insert_string = f"INSERT INTO BLOOD_TEST_RESULT(White_blood_Cell_Count, Red_blood_Cell_Count, Hemoglobin, Hematocrit, MCV, MCH, RDW, Platelet_Count, Lymphocyte, Monocyte, Cholesterol, Iron, Sodium, Potassium, Appt_ID) VALUE({white_blood},{red_blood},{hemoglobin},{hematocrit},{mcv},{mch},{rdw},{platelet},{lymphocyte},{monocyte},{cholesterol},{iron},{sodium},{potassium},{appt_id})"
+            insert_string = f"INSERT INTO blood_test_result(White_blood_Cell_Count, Red_blood_Cell_Count, Hemoglobin, Hematocrit, MCV, MCH, RDW, Platelet_Count, Lymphocyte, Monocyte, Cholesterol, Iron, Sodium, Potassium, Appt_ID) VALUE({white_blood},{red_blood},{hemoglobin},{hematocrit},{mcv},{mch},{rdw},{platelet},{lymphocyte},{monocyte},{cholesterol},{iron},{sodium},{potassium},{appt_id})"
             qe.connect()
             qe.do_query(insert_string)
             qe.commit()
             qe.disconnect()
-            query_string = f"SELECT Blood_test_id FROM BLOOD_TEST_RESULT WHERE Appt_ID = {appt_id}"
+            query_string = f"SELECT Blood_test_id FROM blood_test_result WHERE Appt_ID = {appt_id}"
             qe.connect()
             blood_id = qe.do_query(query_string)[0][0]
             qe.disconnect()
-            update_string = f"UPDATE POST_APPOINTMENT SET Blood_Test_ID = {blood_id} WHERE Appointment_ID = {appt_id}"
+            update_string = f"UPDATE post_appointment SET Blood_Test_ID = {blood_id} WHERE Appointment_ID = {appt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
             qe.disconnect()
-            update_string = f"UPDATE APPOINTMENT SET Appt_Status = 'Completed' WHERE Appt_ID = {appt_id}"
+            update_string = f"UPDATE appointment SET Appt_Status = 'Completed' WHERE Appt_ID = {appt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
@@ -549,49 +566,49 @@ def staffPostPrescript(st_username, appt_id, blood):
         numfill = form.numfill.data
 
         if form.submit.data:
-            query_string = f"SELECT With_Doctor, Patient_ID FROM APPOINTMENT WHERE Appt_ID = {appt_id}"
+            query_string = f"SELECT With_Doctor, Patient_ID FROM appointment WHERE Appt_ID = {appt_id}"
             qe.connect()
             ppl = qe.do_query(query_string)
             dr_id = ppl[0][0]
             pt_id = ppl[0][1]
             qe.disconnect()
-            insert_string = f"INSERT INTO PRESCRIPTION(Drug_Name, Assigned_By, Usage_Note, Num_Refill, Patient_ID, Appt_ID) VALUE('{drug}',{dr_id},'{usage}',{numfill},{pt_id},{appt_id})"
+            insert_string = f"INSERT INTO prescription(Drug_Name, Assigned_By, Usage_Note, Num_Refill, Patient_ID, Appt_ID) VALUE('{drug}',{dr_id},'{usage}',{numfill},{pt_id},{appt_id})"
             qe.connect()
             qe.do_query(insert_string)
             qe.commit()
             qe.disconnect()
-            query_string = f"SELECT Prescription_ID FROM PRESCRIPTION WHERE Appt_ID = {appt_id}"
+            query_string = f"SELECT Prescription_ID FROM prescription WHERE Appt_ID = {appt_id}"
             qe.connect()
             prescript_id = qe.do_query(query_string)[0][0]
             qe.disconnect()
-            update_string = f"UPDATE POST_APPOINTMENT SET Prescription_ID = {prescript_id} WHERE Appointment_ID = {appt_id}"
+            update_string = f"UPDATE post_appointment SET Prescription_ID = {prescript_id} WHERE Appointment_ID = {appt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
             qe.disconnect()
-            update_string = f"UPDATE APPOINTMENT SET Appt_Status = 'Completed' WHERE Appt_ID = {appt_id}"
+            update_string = f"UPDATE appointment SET Appt_Status = 'Completed' WHERE Appt_ID = {appt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
             qe.disconnect()
             return redirect(url_for('staffPage',st_username = st_username))
         if form.next_submit.data:
-            query_string = f"SELECT With_Doctor, Patient_ID FROM APPOINTMENT WHERE Appt_ID = {appt_id}"
+            query_string = f"SELECT With_Doctor, Patient_ID FROM appointment WHERE Appt_ID = {appt_id}"
             qe.connect()
             ppl = qe.do_query(query_string)
             dr_id = ppl[0][0]
             pt_id = ppl[0][1]
             qe.disconnect()
-            insert_string = f"INSERT INTO PRESCRIPTION(Drug_Name, Assigned_By, Usage_Note, Num_Refill, Patient_ID, Appt_ID) VALUE('{drug}',{dr_id},'{usage}',{numfill},{pt_id},{appt_id})"
+            insert_string = f"INSERT INTO prescription(Drug_Name, Assigned_By, Usage_Note, Num_Refill, Patient_ID, Appt_ID) VALUE('{drug}',{dr_id},'{usage}',{numfill},{pt_id},{appt_id})"
             qe.connect()
             qe.do_query(insert_string)
             qe.commit()
             qe.disconnect()
-            query_string = f"SELECT Prescription_ID FROM PRESCRIPTION WHERE Appt_ID = {appt_id}"
+            query_string = f"SELECT Prescription_ID FROM prescription WHERE Appt_ID = {appt_id}"
             qe.connect()
             prescript_id = qe.do_query(query_string)[0][0]
             qe.disconnect()
-            update_string = f"UPDATE POST_APPOINTMENT SET Prescription_ID = {prescript_id} WHERE Appointment_ID = {appt_id}"
+            update_string = f"UPDATE post_appointment SET Prescription_ID = {prescript_id} WHERE Appointment_ID = {appt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
@@ -609,8 +626,8 @@ def staffConfirm(st_username, appt_id):
     staffID = staffID[0][0]
     qe.disconnect()
     blood_typeExist = True
-    health_query = f"SELECT H.BloodType FROM HEALTH_PROFILE AS H, APPOINTMENT AS A WHERE A.Appt_ID = {appt_id} AND H.Health_Profile_ID = A.Patient_ID"
-    pt_string = f"SELECT Patient_ID FROM APPOINTMENT WHERE Appt_ID = {appt_id}"
+    health_query = f"SELECT H.BloodType FROM health_profile AS H, appointment AS A WHERE A.Appt_ID = {appt_id} AND H.Health_Profile_ID = A.Patient_ID"
+    pt_string = f"SELECT Patient_ID FROM appointment WHERE Appt_ID = {appt_id}"
     qe.connect()
     blood = qe.do_query(health_query)[0][0]
     pt_id = qe.do_query(pt_string)[0][0]
@@ -631,11 +648,11 @@ def staffConfirm(st_username, appt_id):
         if correct_blood == False:
             flash(f'Incorrect Blood Type', 'danger')
         else:
-            update_string = f"UPDATE HEALTH_PROFILE SET BloodType = '{blood_type}', Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
+            update_string = f"UPDATE health_profile SET BloodType = '{blood_type}', Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
             qe.connect()
             qe.do_query(update_string)
             qe.commit()
-            update_string = f"UPDATE APPOINTMENT SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+            update_string = f"UPDATE appointment SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
             qe.do_query(update_string)
             qe.commit()
             qe.disconnect()
@@ -647,11 +664,11 @@ def staffConfirm(st_username, appt_id):
         health_summary = form.health_summary.data
         height = form.height.data
         weight = form.weigth.data
-        update_string = f"UPDATE HEALTH_PROFILE SET Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
+        update_string = f"UPDATE health_profile SET Health_Summary = '{health_summary}',Height = {height},Weight={weight} WHERE Health_Profile_ID = {pt_id}"
         qe.connect()
         qe.do_query(update_string)
         qe.commit()
-        update_string = f"UPDATE APPOINTMENT SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+        update_string = f"UPDATE appointment SET Confirm_By = {staffID}, Appt_Status = 'Process', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
         qe.do_query(update_string)
         qe.commit()
         qe.disconnect()
@@ -714,7 +731,7 @@ def staffPage(st_username):
             appt_id = data["selectRow"]
             qe.disconnect()
             qe.connect()
-            status = qe.do_query(f"SELECT Appt_Status FROM APPOINTMENT WHERE Appt_ID = {appt_id};")
+            status = qe.do_query(f"SELECT Appt_Status FROM appointment WHERE Appt_ID = {appt_id};")
             status = status[0][0]
             qe.disconnect()
             if (status == "Booked"):
@@ -773,7 +790,7 @@ def staffAptSearchResult(st_username, date_search):
             appt_id = data["selectRow"]
             qe.disconnect()
             qe.connect()
-            status = qe.do_query(f"SELECT Appt_Status FROM APPOINTMENT WHERE Appt_ID = {appt_id};")
+            status = qe.do_query(f"SELECT Appt_Status FROM appointment WHERE Appt_ID = {appt_id};")
             status = status[0][0]
             qe.disconnect()
             if (status == "Booked"):
@@ -814,7 +831,7 @@ def requestedSpecialist(pt_username):
         reasonData = form.reason.data
         qe.connect()
         patient_ID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}';")
-        patient_ID = patient_ID[0][0];
+        patient_ID = patient_ID[0][0]
         qe.disconnect()
         qe.connect()
         query_string = (f"SELECT Patient_ID FROM specialistrequest WHERE Patient_ID={patientID} AND Requested_Status='Pending';")
@@ -866,7 +883,7 @@ def patientPostAppt(pt_username, appt_id):
 
     blood_test = True
     prescript = True
-    post_string = f"SELECT Doctor_Diagnosis, Balance_Due, Blood_Test_ID, Prescription_ID FROM POST_APPOINTMENT WHERE Appointment_ID = {appt_id}"
+    post_string = f"SELECT Doctor_Diagnosis, Balance_Due, Blood_Test_ID, Prescription_ID FROM post_appointment WHERE Appointment_ID = {appt_id}"
     qe.connect()
     all_post = qe.do_query(post_string)[0]
     qe.disconnect()
@@ -879,7 +896,7 @@ def patientPostAppt(pt_username, appt_id):
     blood_result = []
     if blood_test == True:
         qe.connect()
-        blood_test_query = f"SELECT Blood_test_id FROM BLOOD_TEST_RESULT WHERE Appt_ID = {appt_id}"
+        blood_test_query = f"SELECT Blood_test_id FROM blood_test_result WHERE Appt_ID = {appt_id}"
         blood_result = qe.do_query(blood_test_query)[0][0]
         print(blood_result)
         qe.disconnect()
@@ -887,7 +904,7 @@ def patientPostAppt(pt_username, appt_id):
     prescript_result = []
     if prescript == True:
         qe.connect()
-        prescript_query = f"SELECT Prescription_ID, Drug_Name, Usage_Note, Num_Refill, Patient_ID FROM PRESCRIPTION WHERE Appt_ID = {appt_id}"
+        prescript_query = f"SELECT Prescription_ID, Drug_Name, Usage_Note, Num_Refill, Patient_ID FROM prescription WHERE Appt_ID = {appt_id}"
         prescript_result = qe.do_query(prescript_query)[0]
         qe.disconnect()
 
@@ -936,7 +953,7 @@ def Patient_Health_Profile(pt_username):
         WHERE log_in.UserName = '{pt_username}' \
         AND log_in.User_ID=health_profile.Health_Profile_ID;")
 
-    result = qe.do_query(query_string);
+    result = qe.do_query(query_string)
     qe.disconnect()
     data =[]
 
@@ -989,7 +1006,7 @@ def makeAppointment(pt_username):
     query_approval = f"SELECT Approval_Status FROM patient WHERE Patient_ID = {pt_id}"
     approval = qe.do_query(query_approval)[0][0]
     approval = (approval == 'T')
-    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM PATIENT AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
+    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM patient AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
     doctor = qe.do_query(query_doctor)[0]
     qe.disconnect()
     form = ApptDoctor()
@@ -997,7 +1014,7 @@ def makeAppointment(pt_username):
         return redirect(url_for("specialistType", pt_username = pt_username))
     elif form.submitDoctor.data:
         qe.connect()
-        query_string = (f"SELECT P.Primary_physician_ID FROM PATIENT AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
+        query_string = (f"SELECT P.Primary_physician_ID FROM patient AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
         dr_id = qe.do_query(query_string)[0][0]
         qe.disconnect()
         return redirect(url_for('appointmentloc', pt_username = pt_username, dr_id = dr_id))
@@ -1047,7 +1064,7 @@ def chooseSpecialist(pt_username, specialization):
 @app.route("/appointmentDate/<pt_username>/<dr_id>", methods = ['GET','POST'])
 def appointmentloc(pt_username, dr_id):
     form = ApptLoc()
-    query_string = f"SELECT O.Office_Name FROM OFFICE AS O, DOCTOR_OFFICE AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
+    query_string = f"SELECT O.Office_Name FROM office AS O, doctor_office AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
     qe.connect()
     apt_loc = qe.do_query(query_string)
     qe.disconnect()
@@ -1060,10 +1077,10 @@ def appointmentloc(pt_username, dr_id):
         return redirect(url_for('scheduleDate', pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
     elif (form.back.data):
         qe.connect()
-        pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+        pt_string = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
         pt_id = qe.do_query(pt_string)[0][0]
 
-        pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+        pp_string = f"SELECT Primary_physician_ID FROM patient WHERE Patient_ID = {pt_id}"
         pp_id = qe.do_query(pp_string)[0][0]
         qe.disconnect()
 
@@ -1082,10 +1099,10 @@ def appointmentloc(pt_username, dr_id):
 def scheduleDate(pt_username, dr_id, apt_loc):
   form = ApptDate()
   qe.connect()
-  query_loc = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  query_loc = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(query_loc)[0][0]
-  query_string = f"SELECT D.Working_date FROM APPOINTMENT AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
-  already_string = f"SELECT A.App_date FROM APPOINTMENT AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
+  query_string = f"SELECT D.Working_date FROM appointment AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
+  already_string = f"SELECT A.App_date FROM appointment AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
   already = qe.do_query(already_string)
 
   appts = qe.do_query(query_string)  
@@ -1131,7 +1148,7 @@ def scheduleDate(pt_username, dr_id, apt_loc):
 def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
   form = ApptHour()
   qe.connect()
-  loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  loc_string = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(loc_string)[0][0]
   query_appointments = (f"SELECT App_hour FROM appointment WHERE With_Doctor = {dr_id} AND App_date = '{str(apt_date)}' AND Appt_Status = 'Booked' AND App_Location_ID = {loc_id}")
   appts = qe.do_query(query_appointments)
@@ -1168,24 +1185,24 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
       else:
           apt_type = ""
           qe.connect()
-          loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+          loc_string = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
           apt_id = qe.do_query(loc_string)[0][0]
-          pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+          pt_string = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
           pt_id = qe.do_query(pt_string)[0][0]
 
-          pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+          pp_string = f"SELECT Primary_physician_ID FROM patient WHERE Patient_ID = {pt_id}"
           pp_id = qe.do_query(pp_string)[0][0]
 
           apt_type = "General"
           if pp_id != int(dr_id):
               apt_type = "Specialist"
           #print(apt_type)
-          insert_string = f"INSERT INTO APPOINTMENT(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
+          insert_string = f"INSERT INTO appointment(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
           if apt_type == "Specialist":
-            approval_string = f"UPDATE PATIENT SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+            approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
             qe.connect()
             qe.do_query(approval_string)
             qe.commit()
@@ -1340,7 +1357,7 @@ def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
 
     mail.send(msg1)
     mail.send(msg2)
-    return redirect(url_for('pt_View_Current_Appointment',pt_username=username))
+    return redirect(url_for('Patient_View',pt_username=username))
 
 '''
 _________________________________________________________________________________________________
@@ -1382,7 +1399,7 @@ def staffMakeAppt(st_username):
         fname = form.first_name.data
         lname = form.last_name.data
         dob = form.dob.data
-        pt_query = f"SELECT L.UserName FROM GENERAL_INFO AS G, PATIENT AS P, LOG_IN AS L WHERE G.First_Name = '{fname}' AND G.Last_Name = '{lname}' AND G.DOB = '{str(dob)}' AND G.Hospital_ID = P.Patient_ID AND G.Hospital_ID = L.User_ID"
+        pt_query = f"SELECT L.UserName FROM general_info AS G, patient AS P, log_in AS L WHERE G.First_Name = '{fname}' AND G.Last_Name = '{lname}' AND G.DOB = '{str(dob)}' AND G.Hospital_ID = P.Patient_ID AND G.Hospital_ID = L.User_ID"
         qe.connect()
         pt_username = qe.do_query(pt_query)
         qe.disconnect()
@@ -1403,7 +1420,7 @@ def pickDoctor(st_username, pt_username):
     query_approval = f"SELECT Approval_Status FROM patient WHERE Patient_ID = {pt_id}"
     approval = qe.do_query(query_approval)[0][0]
     approval = (approval == 'T')
-    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM PATIENT AS P, GENERAL_INFO AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
+    query_doctor = f"SELECT P.Primary_physician_ID, G.Last_Name FROM patient AS P, general_info AS G WHERE P.Patient_ID = {pt_id} AND P.Primary_Physician_ID = G.Hospital_ID"
     doctor = qe.do_query(query_doctor)[0]
     qe.disconnect()
     form = staffPickDoctor()
@@ -1411,7 +1428,7 @@ def pickDoctor(st_username, pt_username):
         return redirect(url_for("pickSpecialType", st_username = st_username, pt_username = pt_username))
     elif form.submitDoctor.data:
         qe.connect()
-        query_string = (f"SELECT P.Primary_physician_ID FROM PATIENT AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
+        query_string = (f"SELECT P.Primary_physician_ID FROM patient AS P, LOG_IN as L WHERE P.Patient_ID = L.User_ID AND L.UserName = '{pt_username}'")
         dr_id = qe.do_query(query_string)[0][0]
         qe.disconnect()
         return redirect(url_for('pickLoc', st_username = st_username, pt_username = pt_username, dr_id = dr_id))
@@ -1456,7 +1473,7 @@ def pickSpecialist(st_username, pt_username,specialization ):
 @app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>", methods = ['GET','POST'])
 def pickLoc(st_username, pt_username, dr_id):
     form = staffPickLoc()
-    query_string = f"SELECT O.Office_Name FROM OFFICE AS O, DOCTOR_OFFICE AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
+    query_string = f"SELECT O.Office_Name FROM office AS O, doctor_office AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
     qe.connect()
     apt_loc = qe.do_query(query_string)
     qe.disconnect()
@@ -1469,9 +1486,9 @@ def pickLoc(st_username, pt_username, dr_id):
         return redirect(url_for('pickDate', st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
     elif (form.back.data):
         qe.connect()
-        pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+        pt_string = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
         pt_id = qe.do_query(pt_string)[0][0]
-        pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+        pp_string = f"SELECT Primary_physician_ID FROM patient WHERE Patient_ID = {pt_id}"
         pp_id = qe.do_query(pp_string)[0][0]
         qe.disconnect()
 
@@ -1490,10 +1507,10 @@ def pickLoc(st_username, pt_username, dr_id):
 def pickDate(st_username, pt_username,dr_id,apt_loc):
   form = StaffPickDate()
   qe.connect()
-  query_loc = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  query_loc = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(query_loc)[0][0]
-  query_string = f"SELECT D.Working_date FROM APPOINTMENT AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
-  already_string = f"SELECT A.App_date FROM APPOINTMENT AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
+  query_string = f"SELECT D.Working_date FROM appointment AS A, DOCTOR_OFFICE AS D WHERE D.Doctor_ID = {dr_id} AND D.Office_ID = {loc_id}"
+  already_string = f"SELECT A.App_date FROM appointment AS A, LOG_IN AS L WHERE L.UserName = '{pt_username}' AND L.User_ID = A.Patient_ID AND Appt_Status = 'Booked'"
   already = qe.do_query(already_string)
 
   appts = qe.do_query(query_string)  
@@ -1538,7 +1555,7 @@ def pickDate(st_username, pt_username,dr_id,apt_loc):
 def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
   form = StaffPickHour()
   qe.connect()
-  loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+  loc_string = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
   loc_id = qe.do_query(loc_string)[0][0]
   query_appointments = (f"SELECT App_hour FROM appointment WHERE With_Doctor = {dr_id} AND App_date = '{str(apt_date)}' AND Appt_Status = 'Booked' AND App_Location_ID = {loc_id}")
   appts = qe.do_query(query_appointments)
@@ -1575,24 +1592,24 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
       else:
           apt_type = ""
           qe.connect()
-          loc_string = f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{apt_loc}'"
+          loc_string = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
           apt_id = qe.do_query(loc_string)[0][0]
-          pt_string = f"SELECT User_ID FROM LOG_IN WHERE UserName = '{pt_username}'"
+          pt_string = f"SELECT User_ID FROM log_in WHERE UserName = '{pt_username}'"
           pt_id = qe.do_query(pt_string)[0][0]
 
-          pp_string = f"SELECT Primary_physician_ID FROM PATIENT WHERE Patient_ID = {pt_id}"
+          pp_string = f"SELECT Primary_physician_ID FROM patient WHERE Patient_ID = {pt_id}"
           pp_id = qe.do_query(pp_string)[0][0]
 
           apt_type = "General"
           if pp_id != int(dr_id):
               apt_type = "Specialist"
           #print(apt_type)
-          insert_string = f"INSERT INTO APPOINTMENT(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
+          insert_string = f"INSERT INTO appointment(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
           if apt_type == "Specialist":
-            approval_string = f"UPDATE PATIENT SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+            approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
             qe.connect()
             qe.do_query(approval_string)
             qe.commit()
@@ -1610,5 +1627,4 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
 
 if __name__ == '__main__':
     app.run(debug=True)
-
 

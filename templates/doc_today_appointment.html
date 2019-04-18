@@ -62,7 +62,15 @@
                         {{item}}
                       </td>
                 {% endfor %}
-              </tr>
+              
+              {% if row[5] == "Process": %}
+              <td>
+                <form action = "" method = "POST">
+                  <button type = "submit" name ="view" value = {{row[0]}}>View</button>
+                </form>
+              </td>
+            </tr>
+              {% endif %}
             {% endfor %}
           </tbody>
         </table>

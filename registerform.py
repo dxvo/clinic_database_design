@@ -45,7 +45,7 @@ def insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetna
     if aptnum == None:
       aptnum = 'NULL'
 
-    insert_string = (f"INSERT INTO GENERAL_INFO(First_name, Last_Name, Middle_Initial, DOB, Street_Number, Street_Name, Apt_Number,City, State_ID, Zipcode, Email, Phone_Number, Sex, Ethnicity) Value('{fname}','{lname}',{mname},'{dob}',{streetnum},'{streetname}',{aptnum},'{city}',{state_id},{zipcode},'{email}','{phonenum}','{sex}','{ethnicity}')") 
+    insert_string = (f"INSERT INTO general_info(First_name, Last_Name, Middle_Initial, DOB, Street_Number, Street_Name, Apt_Number,City, State_ID, Zipcode, Email, Phone_Number, Sex, Ethnicity) Value('{fname}','{lname}',{mname},'{dob}',{streetnum},'{streetname}',{aptnum},'{city}',{state_id},{zipcode},'{email}','{phonenum}','{sex}','{ethnicity}')") 
     #print(insert_string)   
     qe.connect()
     qe.do_query(insert_string)
@@ -56,7 +56,7 @@ def insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetna
     hos_id = qe.do_query(query_string)
     qe.disconnect()
     hos_id = hos_id[0][0]
-    insert_string = (f"INSERT INTO LOG_IN(User_ID, Username, Password_Hash) VALUE({hos_id},'{username}',MD5('{password}'))")
+    insert_string = (f"INSERT INTO log_in(User_ID, Username, Password_Hash) VALUE({hos_id},'{username}',MD5('{password}'))")
     qe.connect()
     qe.do_query(insert_string)
     qe.commit()
@@ -64,13 +64,13 @@ def insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetna
 
   #def insert_patient(primary_dr, insurance_id, ins_name, ins_expr, ins_phone):
 def insert_staff(username, office_loc, work_date):
-    query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+    query_string = (f"SELECT User_ID FROM log_in WHERE UserName = '{username}'")
     qe.connect()
     hos_id = qe.do_query(query_string)
     qe.disconnect()
     hos_id = hos_id[0][0]
     #print(hos_id)
-    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
+    query_string = (f"SELECT Office_ID FROM office WHERE Office_Name = '{office_loc}'")
     qe.connect()
     office_id = qe.do_query(query_string)
     qe.disconnect()
@@ -80,7 +80,7 @@ def insert_staff(username, office_loc, work_date):
     for d in work_date:
       staff_date = staff_date + d
     #print(staff_date)
-    insert_string = (f"INSERT INTO STAFF(Staff_ID, Office_Location_ID,Employed_Since,Working_date) VALUE({hos_id},{office_id},CURDATE(),'{staff_date}')")
+    insert_string = (f"INSERT INTO staff(Staff_ID, Office_Location_ID,Employed_Since,Working_date) VALUE({hos_id},{office_id},CURDATE(),'{staff_date}')")
     #print(insert_string)
     qe.connect()
     qe.do_query(insert_string)
@@ -88,19 +88,19 @@ def insert_staff(username, office_loc, work_date):
     qe.disconnect()
 
 def insert_doc(username,office_loc, work_date, spec):
-    query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+    query_string = (f"SELECT User_ID FROM log_in WHERE UserName = '{username}'")
     qe.connect()
     hos_id = qe.do_query(query_string)
     qe.disconnect()
     hos_id = hos_id[0][0]
 
-    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
+    query_string = (f"SELECT Office_ID FROM office WHERE Office_Name = '{office_loc}'")
     qe.connect()
     office_id = qe.do_query(query_string)
     qe.disconnect()
     office_id = office_id[0][0]
 
-    query_string = (f"SELECT Specialization_ID FROM SPECIALIZATION WHERE Type = '{spec}'")
+    query_string = (f"SELECT Specialization_ID FROM specialization WHERE Type = '{spec}'")
     qe.connect()
     spec_id = qe.do_query(query_string)
     qe.disconnect()
@@ -111,14 +111,14 @@ def insert_doc(username,office_loc, work_date, spec):
     for d in work_date:
       dr_date = dr_date + d
     
-    insert_string = (f"INSERT INTO DOCTOR(Doctor_ID, Specialization_ID, Employed_Since) VALUE({hos_id},{spec_id},CURDATE())")
+    insert_string = (f"INSERT INTO doctor(Doctor_ID, Specialization_ID, Employed_Since) VALUE({hos_id},{spec_id},CURDATE())")
     #print(insert_string)
     qe.connect()
     qe.do_query(insert_string)
     qe.commit()
     qe.disconnect()
 
-    insert_string = (f"INSERT INTO DOCTOR_OFFICE(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
+    insert_string = (f"INSERT INTO doctor_office(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
     qe.connect()
     qe.do_query(insert_string)
     qe.commit()
@@ -128,19 +128,19 @@ def add_loc(username, office_loc, work_date):
     office_choice = True
     work_date_choice = True
 
-    query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+    query_string = (f"SELECT User_ID FROM log_in WHERE UserName = '{username}'")
     qe.connect()
     hos_id = qe.do_query(query_string)
     qe.disconnect()
     hos_id = hos_id[0][0]
 
-    query_string = (f"SELECT Office_ID FROM OFFICE WHERE Office_Name = '{office_loc}'")
+    query_string = (f"SELECT Office_ID FROM office WHERE Office_Name = '{office_loc}'")
     qe.connect()
     office_id = qe.do_query(query_string)
     qe.disconnect()
     office_id = office_id[0][0]
 
-    query_string = (f"SELECT count(*) from DOCTOR_OFFICE Where Office_ID = {office_id} AND Doctor_ID = {hos_id} AND End_Date is NULL")
+    query_string = (f"SELECT count(*) from doctor_office Where Office_ID = {office_id} AND Doctor_ID = {hos_id} AND End_Date is NULL")
     qe.connect()
     exist = qe.do_query(query_string)
     qe.disconnect()
@@ -150,7 +150,7 @@ def add_loc(username, office_loc, work_date):
       office_choice = False
       return office_choice, work_date_choice
     
-    query_string = (f"SELECT Working_date from DOCTOR_OFFICE WHERE Doctor_ID = {hos_id} AND End_Date is NULL")
+    query_string = (f"SELECT Working_date from doctor_office WHERE Doctor_ID = {hos_id} AND End_Date is NULL")
     qe.connect()
     exist_workdate = qe.do_query(query_string)
     qe.disconnect()
@@ -170,7 +170,7 @@ def add_loc(username, office_loc, work_date):
     for d in work_date:
       dr_date = dr_date + d
 
-    insert_string = (f"INSERT INTO DOCTOR_OFFICE(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
+    insert_string = (f"INSERT INTO doctor_office(Office_ID, Doctor_ID, Start_Date, Working_date) VALUE({office_id},{hos_id},CURDATE(),'{dr_date}')")
     qe.connect()
     qe.do_query(insert_string)
     qe.commit()
@@ -179,29 +179,29 @@ def add_loc(username, office_loc, work_date):
     return office_choice, work_date_choice
 
 def insert_patient(username, dr_id):
-  query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+  query_string = (f"SELECT User_ID FROM log_in WHERE UserName = '{username}'")
   qe.connect()
   user_id = qe.do_query(query_string)
   qe.disconnect()
   user_id = user_id[0][0]
-  insert_string = (f"INSERT INTO PATIENT(Patient_ID,Patient_Since,Primary_physician_ID) VALUE({user_id},CURDATE(),{dr_id})")
+  insert_string = (f"INSERT INTO patient(Patient_ID,Patient_Since,Primary_physician_ID) VALUE({user_id},CURDATE(),{dr_id})")
   qe.connect()
   qe.do_query(insert_string)
   qe.commit()
   qe.disconnect()
-  insert_string = (f"INSERT INTO HEALTH_PROFILE(Health_Profile_ID) VALUE({user_id})")
+  insert_string = (f"INSERT INTO health_profile(Health_Profile_ID) VALUE({user_id})")
   qe.connect()
   qe.do_query(insert_string)
   qe.commit()
   qe.disconnect()
 
 def insert_insur(username, insur_id, insur_name, insur_exp, insur_phone):
-  query_string = (f"SELECT User_ID FROM LOG_IN WHERE UserName = '{username}'")
+  query_string = (f"SELECT User_ID FROM log_in WHERE UserName = '{username}'")
   qe.connect()
   user_id = qe.do_query(query_string)
   qe.disconnect()
   user_id = user_id[0][0]
-  insert_string = (f"INSERT INTO INSURANCE_INFO(Insurance_ID,Insurance_Name,Expiration,Insur_Phone) VALUE({insur_id},'{insur_name}','{insur_exp}','{insur_phone}')")
+  insert_string = (f"INSERT INTO insurance_info(Insurance_ID,Insurance_Name,Expiration,Insur_Phone) VALUE({insur_id},'{insur_name}','{insur_exp}','{insur_phone}')")
   qe.connect()
   qe.do_query(insert_string)
   qe.commit()

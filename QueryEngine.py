@@ -1,5 +1,5 @@
 import mysql.connector
-
+#cnx = mysql.connector.connect(user="team9project@group9project", password={your_password}, host="group9project.mysql.database.azure.com", port=3306, database={your_database}, ssl_ca={ca-cert filename}, ssl_verify_cert=true)
 # This Query Engine is used to simplify the querying process in python
 
 class QueryEngine:
@@ -14,10 +14,11 @@ class QueryEngine:
       self.setup_default()
   
   def setup_default(self):
-    self.host = "us-mm-dca-720690c860c5.g5.cleardb.net"
-    self.user = "b872fa14b85c86"
-    self.password = "d71a956abec844f"
-    self.database = "heroku_5c85c34484343c5"
+    self.host = "uh-mysqldbserver.mysql.database.azure.com"
+    self.user = "devodevo@uh-mysqldbserver"
+    self.password = "Bank5you"
+    self.database = "medical_clinic"
+  
   
   def connect(self):
     if(self.connected):
