@@ -412,6 +412,7 @@ def specialistApproval(dt_username):
                 temp.append(i + 1)
                 temp += patientData[i]
                 requestedData.append(temp)
+            flash(f"Permission Granted Successfully",'success')
             return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
         if("denyButton" in data):
             requestedID = data["denyButton"]
@@ -440,6 +441,7 @@ def specialistApproval(dt_username):
                 temp.append(i + 1)
                 temp += patientData[i]
                 requestedData.append(temp)
+            flash(f"Permission Denied",'danger')
             return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
     return render_template("specialistApproval.html",dt_username = dt_username,data = requestedData)
 
@@ -485,14 +487,27 @@ def Staff_Report1(st_username):
   
   # Chart 1
   chartActivity = Chart("Appointments in Past Week", "bar", "Appointment Count")
+  table1 = {}
+  for i in range(-7,1):
+    day = date.today().toordinal() + i
+    table1[date.fromordinal(day)] = 0  
   for elem in results1:
-    chartActivity.insert(elem[1], elem[0])
+    table1[elem[1]] = elem[0]
+  for k,v in table1.items():
+    chartActivity.insert(k, v)
+  
   charts.append(chartActivity)
   
   # Chart 2
   chartBalance = Chart("Balances Due in Past Week", "bar", "Balance")
+  table2 = {}
+  for i in range(-7,1):
+    day = date.today().toordinal() + i
+    table2[date.fromordinal(day)] = 0  
   for elem in results2:
-    chartBalance.insert(elem[1], elem[0])
+    table2[elem[1]] = elem[0]
+  for k,v in table2.items():
+    chartBalance.insert(k, v)
   charts.append(chartBalance)
   
   return render_template("staffReport1.html", charts_len = len(charts), charts = charts, st_username = st_username)
