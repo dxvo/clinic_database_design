@@ -711,7 +711,7 @@ def staffPage(st_username):
                                         WHERE App_Location_ID = {staffLocation} \
                                         AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  \
                                         AND A.App_date = DATE_FORMAT((CURDATE()-INTERVAL 5 DAY_HOUR),'%Y-%m-%d') \
-                                        AND (Appt_Status = 'Booked');")
+                                        AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
     qe.disconnect()
     numberedData = []
     for i in range(len(appointmentData)):
