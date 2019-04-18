@@ -10,7 +10,7 @@
 
     <title>Patient Current Appointment</title>
 </head>
-<body>
+<body  style = "background-color:#001B5A;">
     <header class="site-header">
       <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
         <div class="container">
@@ -65,7 +65,7 @@
                   {% endif %}
                 {% endfor %}
                 <td>
-                  <form action="{{ url_for('cancel_appointment',app_id = row[6])}}" method="post">
+                  <form action="{{ url_for('cancel_appointment', pt_username = pt_username, app_id = row[6]) }}" method="post">
                     <button class="btn btn-primary" type="submit" name="Cancel" value="{{row[6]}}" 
                     onclick="alert('Your Appointment has been Successfully Cancelled. PLease check your email for confirmation.')">
                   Cancel App
@@ -73,7 +73,7 @@
                   </form>
                 </td>
                 <td>
-                  <form action="{{ url_for('modify_current_appointment',app_id = row[6])}}" method="post">
+                  <form action="{{ url_for('modify_current_appointment',app_id = row[6], pt_username = pt_username)}}" method="post">
                     <button class="btn btn-primary" type="submit" name="Modify" value="{{row[6]}}" 
                     onclick="alert('Your current appointment is cancelled! Please proceed to make a new appointment')">
                     Modify App
@@ -110,7 +110,11 @@
                 {% endfor %}
                 <td>
                 <form action = "" method = "POST">
-                  <button type = "submit" name = "selectRow" value = {{row[6]}}>Select</button>
+                  {% if row[4] == 'Completed': %}
+                  <button class="btn btn-primary" type = "submit" name = "selectRow" value = {{row[6]}}>Select</button>
+                  {% else: %}
+                  Processing
+                  {% endif %}
                 </form>
               </td>
               </tr>

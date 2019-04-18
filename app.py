@@ -13,7 +13,7 @@ from flask_mail import Mail, Message
 from io import StringIO
 import csv
 import pandas as pd
-
+from Chart import Chart
 
 qe = QueryEngine()
 qe.setup_default()
@@ -325,7 +325,7 @@ def doc_today_appointment(dt_username):
         FROM appointment, office,log_in,general_info \
         WHERE log_in.UserName = '{dt_username}' AND office.Office_ID = appointment.App_Location_ID \
         AND log_in.User_ID = appointment.With_Doctor \
-        AND DATE(appointment.App_date) = DATE_FORMAT((CURDATE()-INTERVAL 5 DAY_HOUR),'%Y-%m-%d') \
+        AND DATE(appointment.App_date) = CURDATE()\
         AND appointment.Patient_ID = general_info.Hospital_ID;")
 
     result = qe.do_query(query_string)
@@ -450,6 +450,52 @@ ________________________________________________________________________________
                         STAFF - STAFF - STAFF SECTION HERE. 
 _________________________________________________________________________________________________
 '''
+@app.route("/report1/<st_username>", methods=['GET', 'POST'])
+def Staff_Report1(st_username):
+  charts = []
+  
+  date_cur = date.today()
+  ord_past = date_cur.toordinal() - 7
+  date_past = date.fromordinal(ord_past)
+  
+  qe.connect()
+  query1 = f'''
+    Select
+    count(App_date),A.App_date
+    from
+    appointment as A, log_in as L, staff as S
+    WHERE L.UserName = '{st_username}' AND S.Staff_ID = L.User_ID AND A.App_Location_ID = S.Office_Location_ID AND A.Appt_Status != 'Cancelled' AND ('{str(date_past)}' <= A.App_date AND A.App_date <= '{str(date_cur)}') 
+    GROUP BY
+    App_date
+  '''
+  
+  query2 = f'''
+    Select
+    P.Balance_Due, A.App_date
+    from
+    appointment as A, log_in as L, staff as S, post_appointment as P
+    WHERE L.UserName = '{st_username}' AND S.Staff_ID = L.User_ID AND A.App_Location_ID = S.Office_Location_ID AND A.Appt_Status != 'Cancelled' AND P.Appointment_ID = A.Appt_ID AND ('{str(date_past)}' <= A.App_date AND A.App_date <= '{str(date_cur)}') 
+    GROUP BY
+    App_date
+  '''
+  
+  results1 = qe.do_query(query1)
+  results2 = qe.do_query(query2)
+  qe.disconnect()
+  
+  # Chart 1
+  chartActivity = Chart("Appointments in Past Week", "bar", "Appointment Count")
+  for elem in results1:
+    chartActivity.insert(elem[1], elem[0])
+  charts.append(chartActivity)
+  
+  # Chart 2
+  chartBalance = Chart("Balances Due in Past Week", "bar", "Balance")
+  for elem in results2:
+    chartBalance.insert(elem[1], elem[0])
+  charts.append(chartBalance)
+  
+  return render_template("staffReport1.html", charts_len = len(charts), charts = charts, st_username = st_username)
 
 @app.route("/Staff_View/<st_username>", methods=['GET', 'POST'])
 def Staff_View(st_username):
@@ -710,7 +756,7 @@ def staffPage(st_username):
     appointmentData = qe.do_query(f"SELECT A.Appt_ID, A.Confirm_By,D.Last_Name,P.Last_Name, A.App_date,A.App_hour,Appt_Status FROM general_info AS D, general_info AS P,appointment AS A \
                                         WHERE App_Location_ID = {staffLocation} \
                                         AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  \
-                                        AND A.App_date = DATE_FORMAT((CURDATE()-INTERVAL 5 DAY_HOUR),'%Y-%m-%d') \
+                                        AND A.App_date = CURDATE() \
                                         AND (Appt_Status = 'Booked' OR Appt_Status = 'Process');")
     qe.disconnect()
     numberedData = []
@@ -923,6 +969,7 @@ def patientPostAppt(pt_username, appt_id):
         qe.do_query(refill_query)
         qe.commit()
         qe.disconnect()
+        flash(f'You have Ordered a Refill','success')
         return redirect(url_for('patientPostAppt',pt_username = pt_username, appt_id = appt_id))
 
     return render_template('patientPostAppt.html', pt_username = pt_username, blood_test = blood_test, prescript = prescript, prescript_result = prescript_result, all_post = all_post)
@@ -1065,7 +1112,7 @@ def chooseSpecialist(pt_username, specialization):
   
   return render_template("apptSpecialist.html", form = form, pt_username = pt_username)
 
-@app.route("/appointmentDate/<pt_username>/<dr_id>", methods = ['GET','POST'])
+@app.route("/appointmentDate/<pt_username>/<int:dr_id>", methods = ['GET','POST'])
 def appointmentloc(pt_username, dr_id):
     form = ApptLoc()
     query_string = f"SELECT O.Office_Name FROM office AS O, doctor_office AS DO WHERE DO.Doctor_ID = {dr_id} AND DO.Office_ID = O.Office_ID"
@@ -1099,7 +1146,7 @@ def appointmentloc(pt_username, dr_id):
     
     return render_template('appointmentLocation.html', form = form, pt_username = pt_username)
 
-@app.route("/appointmentDate/<pt_username>/<dr_id>/<apt_loc>", methods = ['GET', 'POST'])
+@app.route("/appointmentDate/<pt_username>/<int:dr_id>/<apt_loc>", methods = ['GET', 'POST'])
 def scheduleDate(pt_username, dr_id, apt_loc):
   form = ApptDate()
   qe.connect()
@@ -1150,7 +1197,7 @@ def scheduleDate(pt_username, dr_id, apt_loc):
   return render_template('apptDate.html', form = form, titleText = "Choose Date", pt_username = pt_username)
 
 
-@app.route("/appointmentHour/<pt_username>/<dr_id>/<apt_loc>/<apt_date>", methods = ['GET', 'POST'])
+@app.route("/appointmentHour/<pt_username>/<int:dr_id>/<apt_loc>/<apt_date>", methods = ['GET', 'POST'])
 def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
   form = ApptHour()
   qe.connect()
@@ -1207,12 +1254,12 @@ def scheduleHour(pt_username, dr_id, apt_loc, apt_date):
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
-          if apt_type == "Specialist":
-            approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
-            qe.connect()
-            qe.do_query(approval_string)
-            qe.commit()
-            qe.disconnect()
+        #   if apt_type == "Specialist":
+        #     approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+        #     qe.connect()
+        #     qe.do_query(approval_string)
+        #     qe.commit()
+        #     qe.disconnect()
 
           flash(f'You Successfully Make An Appointment','success')
           return redirect(url_for('makeAppointment', pt_username = pt_username))
@@ -1284,7 +1331,7 @@ def pt_View_Current_Appointment(pt_username):
         AND L.User_ID = A.Patient_ID \
         AND O.Office_ID =  A.App_Location_ID\
         AND A.With_Doctor = G.Hospital_ID\
-        AND A.Appt_Status = 'Completed' ;")
+        AND (A.Appt_Status = 'Completed' Or A.Appt_Status = 'Process');")
 
     completed_result= qe.do_query(query_string_completed)
     qe.disconnect()
@@ -1338,8 +1385,8 @@ ________________________________________________________________________________
                     EMAIL WHEN APPOINTMENT IS CANCELLED
 _________________________________________________________________________________________________
 '''
-@app.route("/SendEmail/<D_Fname>/<D_Email>/<P_Fname>/<P_Email>/<Type>")
-def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
+@app.route("/SendEmail/<pt_username>/<D_Fname>/<D_Email>/<P_Fname>/<P_Email>/<Type>")
+def SendEmail(pt_username, D_Fname,D_Email,P_Fname,P_Email,Type):
     #Get username to redirect back to account page 
     qe.connect()
     query_string = (f"SELECT UserName \
@@ -1363,7 +1410,7 @@ def SendEmail(D_Fname,D_Email,P_Fname,P_Email,Type):
 
     mail.send(msg1)
     mail.send(msg2)
-    return redirect(url_for('pt_View_Current_Appointment',pt_username=username))
+    return redirect(url_for('pt_View_Current_Appointment',pt_username=pt_username))
 
 '''
 _________________________________________________________________________________________________
@@ -1372,8 +1419,8 @@ ________________________________________________________________________________
 _________________________________________________________________________________________________
 '''
 
-@app.route("/cancel_Appointment/<app_id>",methods=['GET', 'POST'])
-def cancel_appointment(app_id):
+@app.route("/cancel_Appointment/<pt_username>/<app_id>",methods=['GET', 'POST'])
+def cancel_appointment(app_id,pt_username):
     qe.connect()
     query_string = (f"UPDATE appointment SET Appt_Status = 'Cancelled' WHERE Appt_ID = {app_id};")
     qe.do_query(query_string)
@@ -1393,7 +1440,7 @@ def cancel_appointment(app_id):
     Type = "cancelled"
     qe.disconnect()
 
-    return redirect(url_for('SendEmail',D_Fname = doctor_fname,D_Email = doctor_email,
+    return redirect(url_for('SendEmail',pt_username = pt_username, D_Fname = doctor_fname,D_Email = doctor_email,
         P_Fname = patient_fname,P_Email = patient_email,Type = Type))
 
 
@@ -1405,17 +1452,53 @@ def staffMakeAppt(st_username):
         fname = form.first_name.data
         lname = form.last_name.data
         dob = form.dob.data
-        pt_query = f"SELECT L.UserName FROM general_info AS G, patient AS P, log_in AS L WHERE G.First_Name = '{fname}' AND G.Last_Name = '{lname}' AND G.DOB = '{str(dob)}' AND G.Hospital_ID = P.Patient_ID AND G.Hospital_ID = L.User_ID"
-        qe.connect()
-        pt_username = qe.do_query(pt_query)
-        qe.disconnect()
-        if not pt_username:
-            flash(f'This Patient is Not in Clinic Database','danger')
-        else:
-            pt_username = pt_username[0][0]
-            return redirect(url_for('pickDoctor',st_username = st_username, pt_username = pt_username))
+        return redirect(url_for('pickPatient',st_username = st_username, fname = fname, lname = lname, dob = dob))
 
     return render_template("staffMakeAppt.html", st_username = st_username, form = form)
+
+@app.route("/staffMakeAppt/<st_username>/<fname>/<lname>/<dob>", methods = ['GET','POST'])
+def pickPatient(st_username, fname,lname,dob):
+    pt_query = f"SELECT L.UserName, G.First_Name, G.Last_Name, G.DOB, G.Email, G.Phone_Number FROM general_info AS G, patient AS P, log_in AS L WHERE G.First_Name = '{fname}' AND G.Last_Name = '{lname}' AND G.DOB = '{str(dob)}' AND G.Hospital_ID = P.Patient_ID AND G.Hospital_ID = L.User_ID"
+    qe.connect()
+    pt_list = qe.do_query(pt_query)
+    qe.disconnect()
+
+    if(request.method == "POST"):
+        data = request.form
+        if ("selectRow" in data):
+            pt_username = data["selectRow"]
+            return redirect(url_for("pickDoctor",st_username = st_username, pt_username = pt_username))
+    return render_template("PickPatient.html",st_username = st_username, pt_list = pt_list)
+
+@app.route("/cancelAppt/<st_username>", methods = ['GET','POST'])
+def cancelMissedAppt(st_username):
+    qe.connect()
+    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
+    staffID = staffID[0][0]
+    staffLocation = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
+    staffLocation = staffLocation[0][0]
+    qe.disconnect()
+    qe.connect()
+    appointmentData = qe.do_query(f"SELECT A.Appt_ID, D.Last_Name,P.Last_Name, A.App_date, Appt_Status, P.Phone_Number, P.Email FROM general_info AS D, general_info AS P,appointment AS A \
+                                        WHERE App_Location_ID = {staffLocation} \
+                                        AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  \
+                                        AND A.App_date = Subdate(CURDATE(),1)\
+                                        AND A.Confirm_By is Null \
+                                        AND Appt_Status = 'Booked'")
+    qe.disconnect()
+    if (request.method == "POST"):
+        data = request.form
+        if ("selectRow" in data):
+            appt_id = data["selectRow"]
+            print(appt_id)
+            cancel_string = f"UPDATE appointment SET Appt_Status = 'Cancelled', Last_Updated = NOW() WHERE Appt_ID = {appt_id}"
+            qe.connect()
+            qe.do_query(cancel_string)
+            qe.commit()
+            qe.disconnect()
+            flash(f'Appointment Has Been Cancelled','success')
+            return redirect(url_for('cancelMissedAppt',st_username = st_username))
+    return render_template('staffCancelAppt.html', st_username = st_username, appointmentData = appointmentData)
 
 @app.route("/staffMakeAppt/<st_username>/<pt_username>",methods = ['GET','POST'])
 def pickDoctor(st_username, pt_username):
@@ -1488,7 +1571,7 @@ def pickLoc(st_username, pt_username, dr_id):
     if (form.submit.data):
         #print(form.select.data)
         apt_loc = form.select.data
-        #print(apt_loc)
+        print(apt_loc)
         return redirect(url_for('pickDate', st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
     elif (form.back.data):
         qe.connect()
@@ -1509,8 +1592,10 @@ def pickLoc(st_username, pt_username, dr_id):
     
     return render_template("pickLoc.html", st_username = st_username, pt_username = pt_username, form= form )
 
-@app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>/<apt_loc>", methods = ['GET','POST'])
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<int:dr_id>/<apt_loc>", methods = ['GET','POST'])
 def pickDate(st_username, pt_username,dr_id,apt_loc):
+    
+  print('Iam here')
   form = StaffPickDate()
   qe.connect()
   query_loc = f"SELECT Office_ID FROM office WHERE Office_Name = '{apt_loc}'"
@@ -1522,7 +1607,6 @@ def pickDate(st_username, pt_username,dr_id,apt_loc):
   appts = qe.do_query(query_string)  
     
   qe.disconnect()
-
   workingDate = appts[0][0]
   #print("working date: ",workingDate)
   weekday = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su']
@@ -1557,7 +1641,7 @@ def pickDate(st_username, pt_username,dr_id,apt_loc):
 
   return render_template('PickDate.html', st_username = st_username, form = form, titleText = "Choose Date", pt_username = pt_username)
 
-@app.route("/staffMakeAppt/<st_username>/<pt_username>/<dr_id>/<apt_loc>/<apt_date>", methods = ['GET','POST'])
+@app.route("/staffMakeAppt/<st_username>/<pt_username>/<int:dr_id>/<apt_loc>/<apt_date>", methods = ['GET','POST'])
 def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
   form = StaffPickHour()
   qe.connect()
@@ -1614,12 +1698,12 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
-          if apt_type == "Specialist":
-            approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
-            qe.connect()
-            qe.do_query(approval_string)
-            qe.commit()
-            qe.disconnect()
+        #   if apt_type == "Specialist":
+        #     approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
+        #     qe.connect()
+        #     qe.do_query(approval_string)
+        #     qe.commit()
+        #     qe.disconnect()
 
           flash(f'You Successfully Make An Appointment','success')
           return redirect(url_for('staffMakeAppt', st_username = st_username, pt_username = pt_username, dr_id = dr_id))

@@ -8,22 +8,12 @@
 
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
 
-    <title>Staff Post Page</title>
+    <title>Staff Page</title>
 </head>
 <body  style = "background-color:#001B5A;">
   <main role="main" class="container">
     <div class="row">
       <div class="col-md-8">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }}">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
       </div>
     </div>
   </main>
@@ -57,49 +47,56 @@
       </nav>
     </header>
     <main role="main" class="container">
-      <div class="form-container text-white">
-      <h2 style = "color: white;">Post Appointment</h2>
-        <form method="POST" action="" style = "color: white;">
-            {{ form.hidden_tag() }}
-                <div class="form-container">
-                    {{ form.doctorDiagnosis.label(class="form-control-label") }}
-                    {% if form.doctorDiagnosis.errors %}
-                        {{ form.doctorDiagnosis(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.doctorDiagnosis.errors %}
-                                <span>{{ error }}</span>
+        <div class="row">
+          <div class="col-md-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            {% block content %}
+            {% endblock %}
+          </div>
+        </div>
+      </main>
+                <main role="main" class="container">
+                  <div class="container" style = "text-align:center;">
+                    <h2 style = "text-align:left; color: white;">Appointments</h2>
+                    <table class="table table-dark table-striped table-hover table-bordered text-white">
+                      <thead>
+                        <th>Doctor</th>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Appt Status</th>
+                        <th>Patient Phone Number</th>
+                        <th>Patient Email</th>
+                      </thead>
+                      <tbody>
+                        {% for row in appointmentData %}
+                          <tr>
+                            {% for item in row %}
+                              {% if item != row[0]: %}
+                                  <td>
+                                    {{item}}
+                                  </td>
+                              {% endif %}
+                              
                             {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.doctorDiagnosis(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
-                <hr>
-                <div class = "form-row">
-                  <div class="form-container mycontent-left">
-                      {{ form.balance.label(class="form-control-label") }}
-                      {% if form.balance.errors %}
-                          {{ form.balance(class="form-control form-control-lg is-invalid") }}
-                          <div class="invalid-feedback">
-                              {% for error in form.balance.errors %}
-                                  <span>{{ error }}</span>
-                              {% endfor %}
-                          </div>
-                      {% else %}
-                          {{ form.balance(class="form-control form-control-lg") }}
-                      {% endif %}
+                            <td>
+                              <form class="" action="" method="post">
+                                  <button type="submit" name="selectRow" value="{{row[0]}}">Cancel</button>
+                              </form>
+                            </td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
                   </div>
-                  <div class = "form-container mycontent-right">
-                      Check If Patient Has Prescription or Blood Test Result
-                      {{ form.blood_prescript(class="form-control form-control-lg") }}
-                  </div>
-                </div>
-            <div class="form-container">
-                {{ form.submit(class="btn btn-outline-info") }}
-            </div>
-        </form>
-      </div>
-    </main>
+                </main>
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
