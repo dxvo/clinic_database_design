@@ -22,6 +22,7 @@ def account_type(username, password):
   patient_type = qe.do_query("select count(*) from patient where Patient_ID = " + str(login_id) )
   doctor_type = qe.do_query("select count(*) from doctor where Doctor_ID = " + str(login_id) )
   staff_type = qe.do_query("select count(*) from staff where Staff_ID = " + str(login_id) )
+  admin_type = qe.do_query("Select count(*) from admin where Admin_ID = " + str(login_id))
   qe.disconnect()
   if patient_type[0][0] == 1:
     return "patient"
@@ -29,6 +30,8 @@ def account_type(username, password):
     return "doctor"
   elif staff_type[0][0] == 1:
     return "staff"
+  elif admin_type[0][0] == 1:
+    return "admin"
 
 def get_login(username, password):
   qe.connect()

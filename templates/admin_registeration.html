@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Medical Clinic</title>
+</head>
+<body  style = "background-color:#001B5A;">
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+              <a class="nav-item nav-link" href="{{ url_for('admin_reg',ad_username=ad_username)}}">
+                <strong>Register Staff/Doctor</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{ url_for('addOffice',ad_username=ad_username)}}">
+                <strong>Add Office</strong>
+              </a>
+
+              <a class="nav-item nav-link" href="{{ url_for('admin_reg',ad_username = ad_username)}}">
+                  <strong>General-Report</strong>
+                </a>
+            </div>
+
+
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{url_for('Admin_View',ad_username = ad_username)}}">
+                <strong>Home Profile</strong>
+              </a>
+              <a class="nav-item nav-link" href="{{url_for('login')}}">
+                <strong>Log Out</strong>
+              </a>
+
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main role="main" class="container">
+      <div class="row">
+        <div class="col-md-8">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+          {% block content %}
+          {% endblock %}
+        </div>
+      </div>
+    </main>
+
+    <div class="content-section" style="width:60%; margin-left: 30px;">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4"><strong>Register Account</strong></legend>
+
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        {{ form.username.label(class="form-control-label") }}
+                        {% if form.username.errors %}
+                            {{ form.username(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.username.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.username(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-7">
+                        {{ form.email.label(class="form-control-label") }}
+                        {% if form.email.errors %}
+                            {{ form.email(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.email.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.email(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                     <div class="form-group col-md-6">
+                        {{ form.password.label(class="form-control-label") }}
+                        {% if form.password.errors %}
+                            {{ form.password(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.password.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.password(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-6">
+                        {{ form.cpassword.label(class="form-control-label") }}
+                        {% if form.cpassword.errors %}
+                            {{ form.cpassword(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.cpassword.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.cpassword(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <div class="form-row">
+                    <div class="form-group col-md-5">
+                        {{ form.firstname.label(class="form-control-label") }}
+
+                        {% if form.firstname.errors %}
+                            {{ form.firstname(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.firstname.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.firstname(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-2">
+                        {{ form.middleinitial.label(class="form-control-label") }}
+
+                        {% if form.middleinitial.errors %}
+                            {{ form.middleinitial(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.middleinitial.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.middleinitial(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>                  
+
+                    <div class="form-group col-md-5">
+                        {{ form.lastname.label(class="form-control-label") }}
+                        {% if form.lastname.errors %}
+                            {{ form.lastname(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.lastname.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.lastname(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                </div>
+
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        {{ form.iam.label(class="form-control-label") }}
+
+                        {% if form.iam.errors %}
+                            {{ form.iam(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.iam.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.iam(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        {{ form.sex.label(class="form-control-label") }}
+
+                        {% if form.sex.errors %}
+                            {{ form.sex(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.sex.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.sex(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-4">
+                        {{ form.ethnicity.label(class="form-control-label") }}
+                        {% if form.ethnicity.errors %}
+                            {{ form.ethnicity(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.ethnicity.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.ethnicity(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-7">
+                        {{ form.dob.label(class="form-control-label") }}
+
+                        {% if form.dob.errors %}
+                            {{ form.dob(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.dob.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.dob(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-5">
+                        {{ form.phonenumber.label(class="form-control-label") }}
+                        {% if form.phonenumber.errors %}
+                            {{ form.phonenumber(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.phonenumber.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.phonenumber(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+
+                <div class="form-row">
+                    <div class="form-group col-md-3">
+                        {{ form.streetnumber.label(class="form-control-label") }}
+
+                        {% if form.streetnumber.errors %}
+                            {{ form.streetnumber(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.streetnumber.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.streetnumber(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-7">
+                        {{ form.streetname.label(class="form-control-label") }}
+                        {% if form.streetname.errors %}
+                            {{ form.streetname(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.streetname.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.streetname(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                   <div class="form-group col-md-2">
+                        {{ form.aptnumber.label(class="form-control-label") }}
+                        {% if form.aptnumber.errors %}
+                            {{ form.aptnumber(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.aptnumber.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.aptnumber(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>               
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        {{ form.city.label(class="form-control-label") }}
+
+                        {% if form.city.errors %}
+                            {{ form.city(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.city.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.city(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="form-group col-md-5">
+                        {{ form.statename.label(class="form-control-label") }}
+                        {% if form.statename.errors %}
+                            {{ form.statename(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.statename.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.statename(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                  <div class="form-group col-md-3">
+                        {{ form.zipcode.label(class="form-control-label") }}
+                        {% if form.zipcode.errors %}
+                            {{ form.zipcode(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.zipcode.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.zipcode(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
+        </form>
+    </div>
+    <div class="border-top pt-3">
+        <small class="text-muted">
+            Already Have An Account? <a class="ml-2" href="{{ url_for('login') }}">Sign In</a>
+        </small>
+    </div>
+
+
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

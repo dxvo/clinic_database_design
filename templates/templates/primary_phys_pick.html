@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+      <form method="POST" action ="">
+        {{ form.hidden_tag() }}
+        <fieldset class = "form-group">
+          <legend class="border-bottom mb-4"><strong>Pick Primary Physician</strong></legend>
+          
+            <div class = "form-group col-md-5">
+              {{ form.pphys_pick.label(class="form-control-label") }}
+              {% if form.pphys_pick.errors %}
+                  {{ form.pphys_pick(class="form-control form-control-lg is-invalid") }}
+                  <div class="invalid-feedback">
+                      {% for error in form.pphys_pick.errors %}
+                          <span>{{ error }}</span>
+                      {% endfor %}
+                  </div>
+              {% else %}
+                  {{ form.pphys_pick(class="form-control form-control-lg") }}
+              {% endif %}
+            </div>
+        </fieldset>
+        
+        <div class="form-group">
+            Press Back to Repick a Office Location. Press Next for Next Step<br>
+            {{ form.back(class="btn btn-outline-info") }}
+            {{ form.next_submit(class="btn btn-outline-info") }}
+
+        </div>
+      </form>
+    
+    
+  </div>
+{% endblock content %}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Patient Current Appointment</title>
+</head>
+<body  style = "background-color:#001B5A;">
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+            <div class="navbar-nav mr-auto">
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('makeAppointment',pt_username=pt_username)}}">Make Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('pt_View_Current_Appointment',pt_username = pt_username)}}">View Current Appointment </a>
+                    </div>
+              </li>
+                <a class="nav-item nav-link" href="{{url_for('Patient_Health_Profile',pt_username=pt_username)}}"><strong>Health Profile</strong></a>
+                <a class="nav-item nav-link" href="{{url_for('requestedSpecialist',pt_username=pt_username)}}"><strong>Request Specialist</strong></a>
+            </div>
+
+            <!-- Navbar Right Side -->
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('Patient_View',pt_username=pt_username) }}"><strong>Home</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    
+    <main role="main" class="container">
+      <div class="container" style = "text-align:center;">
+        <h4 style = "text-align:left; color: white;">Current Appointments</h4>
+        <table class="table table-dark table-striped table-hover table-bordered text-white">
+          <thead>
+            <th>App Type</th>
+            <th>App Date</th>
+            <th>App Time</th>
+            <th>With Doctor</th>
+            <th>Appt Status</th>
+            <th>Office Name</th>
+          </thead>
+          <tbody>
+            {% for row in booked_data %}
+              <tr>
+                {% for item in row %}
+                  {% if item != row[6]: %}
+                      <td>
+                        {{item}}
+                      </td>
+                  {% endif %}
+                {% endfor %}
+                <td>
+                  <form action="{{ url_for('cancel_appointment', pt_username = pt_username, app_id = row[6]) }}" method="post">
+                    <button class="btn btn-primary" type="submit" name="Cancel" value="{{row[6]}}" 
+                    onclick="alert('Your Appointment has been Successfully Cancelled. PLease check your email for confirmation.')">
+                  Cancel App
+                </button>
+                  </form>
+                </td>
+                <td>
+                  <form action="{{ url_for('modify_current_appointment',app_id = row[6], pt_username = pt_username)}}" method="post">
+                    <button class="btn btn-primary" type="submit" name="Modify" value="{{row[6]}}" 
+                    onclick="alert('Your current appointment is cancelled! Please proceed to make a new appointment')">
+                    Modify App
+                  </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <hr>
+
+      <div class="container" style = "text-align:center;">
+        <h4 style = "text-align:left; color: white;">Past Appointments</h4>
+        <table class="table table-dark table-striped table-hover table-bordered text-white">
+          <thead>
+            <th>App Type</th>
+            <th>App Date</th>
+            <th>App Time</th>
+            <th>With Doctor</th>
+            <th>Appt Status</th>
+            <th>Office Name</th>
+          </thead>
+          <tbody>
+            {% for row in completed_data %}
+              <tr>
+                {% for item in row %}
+                  {% if item != row[6]: %}
+                      <td>
+                        {{item}}
+                      </td>
+                  {% endif %}
+                {% endfor %}
+                <td>
+                <form action = "" method = "POST">
+                  {% if row[4] == 'Completed': %}
+                  <button class="btn btn-primary" type = "submit" name = "selectRow" value = {{row[6]}}>Select</button>
+                  {% else: %}
+                  Processing
+                  {% endif %}
+                </form>
+              </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>

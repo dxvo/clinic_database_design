@@ -114,7 +114,7 @@ def patient_reg(pt_username):
 ######## END PATIENT REGISTERATION #########
 
 # REGISTERATION OF STAFF #
-@app.route("/register/staff_reg/<st_username>", methods = ['GET','POST'])
+@app.route("/admin_reg/staff_reg/<st_username>", methods = ['GET','POST'])
 def staff_reg(st_username):
     form = StaffForm()
     if form.validate_on_submit():
@@ -131,7 +131,7 @@ def staff_reg(st_username):
 
 # REGISTERATION OF DOCTOR #
 
-@app.route("/register/doc_reg/<dr_username>/add_loc", methods = ['GET','POST'])
+@app.route("/admin_reg/doc_reg/<dr_username>/add_loc", methods = ['GET','POST'])
 def add_loc(dr_username):
     form = AddLoc()
     if form.validate_on_submit():
@@ -167,7 +167,7 @@ def add_loc(dr_username):
             return redirect(url_for('login'))
     return render_template('add_loc.html', form = form)
 
-@app.route("/register/doc_reg/<dr_username>", methods = ['GET','POST'])
+@app.route("/admin_reg/doc_reg/<dr_username>", methods = ['GET','POST'])
 def doc_reg(dr_username):
     form = DoctorForm()
     if form.validate_on_submit():
@@ -208,7 +208,6 @@ def register():
         sex = form.sex.data
         ethnicity = form.ethnicity.data
         email = form.email.data
-        iam = form.iam.data
 
         if (mname == ""):
             mname = None
@@ -238,15 +237,7 @@ def register():
             flash(f"Please Enter a Valid Date of Birth", 'danger')
         else:
             registerform.insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetname, aptnum, city, state, zipcode, email, phonenum, sex, ethnicity)
-            if (iam == "ST"):
-                flash(f'Account created for {form.username.data}!', 'success')
-                #print(username)
-                return redirect(url_for('staff_reg', st_username = username))
-            elif (iam == "PA"):
-                return redirect(url_for('patient_reg', pt_username = username))
-            elif (iam == "DR"):
-                #print("dr_name: " + username)
-                return redirect(url_for('doc_reg', dr_username = username))
+            return redirect(url_for('patient_reg', pt_username = username))
     return render_template('register.html', title='Register', form=form)
 
 
@@ -280,6 +271,8 @@ def login():
             elif login_check.account_type(username, password) == "staff":
                 # flash(f'You Successfully Log in','success')
                 return redirect(url_for('Staff_View',st_username = username))
+            elif login_check.account_type(username, password) == "admin":
+                return redirect(url_for("Admin_View", ad_username = username))
         else:
             flash('Invalid Account, Check Your Username and Password', 'danger')
 
@@ -1656,6 +1649,7 @@ def pickDate(st_username, pt_username,dr_id,apt_loc):
 
   return render_template('PickDate.html', st_username = st_username, form = form, titleText = "Choose Date", pt_username = pt_username)
 
+
 @app.route("/staffMakeAppt/<st_username>/<pt_username>/<int:dr_id>/<apt_loc>/<apt_date>", methods = ['GET','POST'])
 def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
   form = StaffPickHour()
@@ -1709,16 +1703,12 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
           if pp_id != int(dr_id):
               apt_type = "Specialist"
           #print(apt_type)
-          insert_string = f"INSERT INTO appointment(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
+          insert_string = f"INSERT INTO appointment(App_Type, App_date, App_hour, With_Doctor, Patient_ID, App_Location_ID) \
+          VALUE('{apt_type}','{str(apt_date)}',{apt_hour},{dr_id},{pt_id},{apt_id})"
           qe.do_query(insert_string)
           qe.commit()
           qe.disconnect()
-        #   if apt_type == "Specialist":
-        #     approval_string = f"UPDATE patient SET Approval_Status = 'F' WHERE Patient_ID = {pt_id}"
-        #     qe.connect()
-        #     qe.do_query(approval_string)
-        #     qe.commit()
-        #     qe.disconnect()
+
 
           flash(f'You Successfully Make An Appointment','success')
           return redirect(url_for('staffMakeAppt', st_username = st_username, pt_username = pt_username, dr_id = dr_id))
@@ -1727,6 +1717,129 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
     return redirect(url_for('pickDate',st_username = st_username, pt_username = pt_username, dr_id = dr_id, apt_loc = apt_loc))
   
   return render_template('PickHour.html', st_username = st_username, form = form, titleText = "Choose Hour", no_hour = no_hour, pt_username = pt_username)
+
+@app.route("/Admin_View/<ad_username>", methods = ['GET','POST'])
+def Admin_View(ad_username):
+    qe.connect()
+    query_string = (f" SELECT First_Name, Email, Last_Name, Phone_Number,DOB \
+                        FROM general_info, log_in \
+                        WHERE log_in.User_ID = general_info.Hospital_ID and log_in.UserName = '{ad_username}';")
+
+    result = qe.do_query(query_string)
+    qe.disconnect()
+
+    first_name = result[0][0]
+    email = result[0][1]
+    last_name = result[0][2]
+    phone = result[0][3]
+    dob = result[0][4]
+    return  render_template('Admin_View.html', ad_username = ad_username, first_name = first_name, 
+                                        last_name = last_name, phone = phone, dob = dob, email=email)
+
+@app.route("/admin_reg/<ad_username>", methods = ['GET','POST'])
+def admin_reg(ad_username):
+    form = AdminRegistration()
+    if form.validate_on_submit():
+        username = form.username.data
+        password = form.password.data
+        fname = form.firstname.data
+        lname = form.lastname.data
+        mname = form.middleinitial.data
+        dob = form.dob.data
+        streetnum = form.streetnumber.data
+        streetname = form.streetname.data
+        aptnum = form.aptnumber.data
+        city = form.city.data
+        state = form.statename.data
+        zipcode = form.zipcode.data
+        phonenum = form.phonenumber.data
+        sex = form.sex.data
+        ethnicity = form.ethnicity.data
+        email = form.email.data
+        iam = form.iam.data
+
+        if (mname == ""):
+            mname = None
+        if ethnicity == "W":
+            ethnicity = "White"
+        elif ethnicity == "AA":
+            ethnicity = "African American"
+        elif ethnicity == "AI":
+            ethnicity = "Asian"
+        elif ethnicity == "NA":
+            ethnicity = "Native American"
+        elif ethnicity == "PI":
+            ethnicity = "Pacific Islander"
+        elif ethnicity == "HI":
+            ethnicity = "Pacific Islander"
+        elif ethnicity == "OT":
+            ethnicity = "Others"
+        #print(username, password, fname, lname, mname,dob,streetnum, streetname, aptnum, city, state, zipcode, email, phonenum, sex, ethnicity)
+        
+        if registerform.email_check(email) == False:
+            flash(f"{email} is already TAKEN, Please use another", 'danger')
+        elif registerform.user_check(username) == False:
+            flash(f"{username} is already TAKEN, Please use another", 'danger')
+        elif phonenum.isdigit() == False:
+            flash(f'Please Enter a Valid Phone Number', 'danger')
+        elif (dob < date(1900,1,1)) or (dob > date.today()) :
+            flash(f"Please Enter a Valid Date of Birth", 'danger')
+        else:
+            registerform.insert_to_db(username, password, fname, lname, mname,dob,streetnum, streetname, aptnum, city, state, zipcode, email, phonenum, sex, ethnicity)
+            if (iam == 'ST'):
+                return redirect(url_for("staff_reg", st_username = username))
+            elif (iam == 'DR'):
+                return redirect(url_for("doc_reg", dr_username = username))
+
+    return render_template("admin_registeration.html",form = form,ad_username = ad_username)
+
+
+
+@app.route("/Admin_View/<ad_username>/GeneralReport",methods = ['GET','POST'])
+def GeneralReport(ad_username):
+    return render_template('GeneralReport.html', ad_username = ad_username)
+
+
+@app.route("/addOffice/<ad_username>",methods = ['GET','POST'])
+def addOffice(ad_username):
+    form = AddOfficeForm()
+    if form.validate_on_submit():
+        office_name = form.office_name.data
+        streetnumber = form.streetnumber.data
+        streetname = form.streetname.data
+        city = form.city.data
+
+        statename = form.statename.data
+        zipcode = form.zipcode.data
+
+
+        qe.connect()
+        state = qe.do_query("select State_ID from state where State_code = '" + statename + "'")
+        qe.disconnect()
+        state_id = state[0][0]
+
+        qe.connect()
+        check_office_name = qe.do_query("select count(*) from office \
+            WHERE Office_Name= '" + office_name + "'")
+        qe.disconnect()
+
+        check_office_name = check_office_name[0][0]
+        if (check_office_name == 1):
+            flash(f'This Office Name already Exists','danger')
+        else:
+            qe.connect()
+            query_string = (f"INSERT  INTO office(Office_Name, Street_Number, Street_Name, City, State_ID, Zipcode) \
+                            VALUE('{office_name}',{streetnumber},'{streetname}','{city}',{state_id},{zipcode});")
+
+            qe.do_query(query_string)
+            qe.commit()
+            qe.disconnect()
+            flash(f'Office is successfully Added','success')
+            
+            return redirect(url_for('addOffice',ad_username = ad_username))
+
+    return render_template("addOffice.html",form = form,ad_username = ad_username)
+
 
 
 

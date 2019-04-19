@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div class="content-section">
+      <form method="POST" action ="">
+        {{ form.hidden_tag() }}
+        <fieldset class = "form-group">
+          <legend class="border-bottom mb-4"><strong>Doctor Registeration</strong></legend>
+          
+            <div class = "form-row">
+                <div class = "form-group col-md-5">
+                        {{ form.officelocation.label(class="form-control-label") }}
+                        {% if form.officelocation.errors %}
+                        {{ form.officelocation(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.officelocation.errors %}
+                            <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                            {{ form.officelocation(class="form-control form-control-lg") }}
+                        {% endif %}
+                </div>
+
+                <div class = "form-group col-md-5">
+                        {{ form.work_date.label(class="form-control-label") }}
+                        {% if form.work_date.errors %}
+                        {{ form.work_date(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.work_date.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        {{ form.work_date(class="form-control form-control-lg") }}
+                        {% endif %}
+            </div>
+
+        </div>
+        </fieldset>
+        
+        <div class="form-group">
+            Press "Add Office" IF You Work at Other Office, Press Cancel to Undo. Otherwise, Press Finish If You Do Not Add Anymore!<br>
+            {{ form.submit(class="btn btn-outline-info") }}
+            {{ form.add_loc(class="btn btn-outline-info") }}
+            {{ form.cancel(class="btn btn-outline-info") }}
+        </div>
+      </form>
+  </div>
+{% endblock content %}

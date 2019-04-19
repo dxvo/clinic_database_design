@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    
+    <!--  Import Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+
+    <title>Staff Profile</title>
+</head>
+<body>
+    <header class="site-header">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+        <div class="container">
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarToggle">
+        
+            <div class="navbar-nav mr-auto">
+
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                    <a class="dropdown-item" href="{{url_for('staffPage',st_username = st_username)}}">Today's Appointments</a>
+                    <a class="dropdown-item" href="{{url_for('staffApptSearch',st_username = st_username)}}">Look Up Appointment</a>
+                    <a class="dropdown-item" href="{{url_for('staffMakeAppt', st_username = st_username)}}">Call In Appointment</a>
+                    </div>
+              </li>
+                <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                <strong>Main Profile</strong></a>
+                <a class="nav-item nav-link" href="{{ url_for('Staff_Report1', st_username = st_username) }}">
+                <strong>Report</strong></a>
+            </div>
+            <div class="navbar-nav">
+              <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+    
+    <!--  Container for Chart  -->
+    <div class="container" style="width: 80%; background-color:white; text-align:center;" >
+    {% for i in range(charts_len) %}
+      <canvas id="display{{i}}"></canvas>
+    {% endfor %}
+    </div>
+    
+    <!--  JavaScript for each chart insertion  -->
+    {% for i in range(charts_len) %}
+    <script>
+      let display{{i}} = document.getElementById("display{{i}}").getContext("2d");
+      display{{i}}.canvas.parentNode.style.width = "{{charts[i].get_width()}}";
+      display{{i}}.canvas.parentNode.style.height = "{{charts[i].get_height()}}";
+      
+      let chart{{i}} = new Chart(display{{i}},
+      {
+        type:'{{charts[i].chart_type}}',
+        data:
+        {
+          labels:
+          [
+            {% for label in charts[i].data_labels %}
+            "{{label}}",
+            {% endfor %}
+          ],
+          datasets:
+          [{
+            label:'{{charts[i].chart_label}}',
+            data:
+            [
+              {% for value in charts[i].data_values %}
+              {{value}},
+              {% endfor %}
+            ],
+            backgroundColor:
+            [
+              {% for color in charts[i].data_colors %}
+              "{{color}}",
+              {% endfor %}
+            ]
+          }]
+        },
+        options:
+        {
+          title:
+          {
+            display:true,
+            text:"{{charts[i].title_name}}",
+            fontSize:{{charts[i].title_size}}
+          },
+          scales:
+          {
+              yAxes: [{
+                  ticks:
+                  {
+                      beginAtZero: true
+                  }
+              }]
+          }
+        }
+      }
+      );
+    </script>
+    {% endfor %}
+    
+    
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+</body>
+</html>
