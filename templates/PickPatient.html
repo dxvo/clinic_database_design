@@ -17,29 +17,31 @@
       </div>
     </div>
   </main>
-  <header class="site-header">
+    <header class="site-header">
         <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
           <div class="container">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
               <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarToggle">
-          
+
               <div class="navbar-nav mr-auto">
-  
+
                 <li class="nav-item dropdown">
                       <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><strong>Appointment</strong></a>
                       <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                       <a class="dropdown-item" href="{{url_for('staffPage',st_username = st_username)}}">Today's Appointments</a>
                       <a class="dropdown-item" href="{{url_for('staffApptSearch',st_username = st_username)}}">Look Up Appointment</a>
                       <a class="dropdown-item" href="{{url_for('staffMakeAppt', st_username = st_username)}}">Call In Appointment</a>
-                      <a class="dropdown-item" href="{{url_for('cancelMissedAppt', st_username = st_username)}}">Missed Appointment</a> 
+                      <a class="dropdown-item" href="{{url_for('cancelMissedAppt', st_username = st_username)}}">Missed Appointment</a>
                       </div>
                 </li>
-                  <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
-                  <strong>Main Profile</strong></a>
+                  <a class="nav-item nav-link" href="{{ url_for('ClinicReport',st_username =st_username)}}">
+                  <strong>Clinic-Report</strong></a>
               </div>
               <div class="navbar-nav">
+                <a class="nav-item nav-link" href="{{ url_for('Staff_View', st_username = st_username)}}">
+                <strong>Profile</strong></a>
                 <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Log Out</strong></a>
               </div>
             </div>

@@ -358,3 +358,9 @@ class AddOfficeForm(FlaskForm):
         ('WI','Wisconsin'),('WY','Wyoming')],validators=[DataRequired()])
     zipcode = IntegerField('Zip code',validators=[DataRequired()])
     submit = SubmitField("Submit")
+
+class ReportForm(FlaskForm):
+    from_date = DateField('From',validators=[DataRequired()],format = '%Y-%m-%d')
+    to_date = DateField('To',validators=[DataRequired()],format = '%Y-%m-%d')
+    submit = SubmitField("Submit")
+
