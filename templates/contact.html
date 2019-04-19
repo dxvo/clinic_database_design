@@ -74,28 +74,28 @@ input[type=submit]:hover {
 </head>
 <body  style = "background-color:#001B5A;">
     <header class="site-header">
-      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top" style="background-color: #181718">
-        <div class="container">
+      <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
           <!-- <a class="navbar-brand mr-4" href="/">Medical Clinic</a> -->
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle" aria-controls="navbarToggle" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
-          <div class="collapse navbar-collapse" id="navbarToggle">
+          <div class="collapse navbar-collapse" id="navbarToggle" style="padding-left: 80px;">
             <div class="navbar-nav mr-auto">
               <a class="nav-item nav-link" href="{{ url_for('home') }}"><strong>Home</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('contact') }}"><strong>Contact</strong></a>
+              <a class="nav-item nav-link" href="{{ url_for('about') }}"><strong>People</strong></a>
             </div>
             <!-- Navbar Right Side -->
-            <div class="navbar-nav">
+            <div class="navbar-nav" style="padding-right: 80px;">
               <a class="nav-item nav-link" href="{{ url_for('login') }}"><strong>Login</strong></a>
               <a class="nav-item nav-link" href="{{ url_for('register') }}"><strong>Register</strong></a>
             </div>
           </div>
-        </div>
       </nav>
     </header>
 <div class="container">
   <div style="text-align:center">
-    <h2>Contact Us</h2>
+    <h2><Strong>Contact Us</Strong></h2>
     <p>Swing by for a cup of coffee, or leave us a message:</p>
   </div>
   <div class="row">
@@ -103,7 +103,7 @@ input[type=submit]:hover {
       <img src="../static/Images/contact.jpg" style="width:100%">
     </div>
     <div class="column">
-      <form action="/action heredsdsds">
+      <form action="{{url_for('contact')}}">
         <label for="fname">First Name</label>
         <input type="text" id="fname" name="firstname" placeholder="Your name..">
 
@@ -111,8 +111,8 @@ input[type=submit]:hover {
         <input type="text" id="lname" name="lastname" placeholder="Your last name..">
 
 
-        <label for="userID">Hospital ID</label>
-        <input type="text" id="Hospital_ID" name="Hospital_ID" placeholder="User ID..">
+        <label for="userID">Clinic Name</label>
+        <input type="text" id="Hospital_ID" name="Hospital_ID" placeholder="Clinic Location..">
 
         <label for="country">Country</label>
         <select id="country" name="country">
@@ -121,7 +121,7 @@ input[type=submit]:hover {
         </select>
         <label for="subject">Message</label>
         <textarea id="subject" name="subject" placeholder="Write something.." style="height:170px"></textarea>
-        <input type="submit" value="Submit">
+        <input type="submit" value="Submit" onclick="alert('Message Sent')">
       </form>
     </div>
   </div>

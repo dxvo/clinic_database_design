@@ -1836,7 +1836,7 @@ def addOffice(ad_username):
             qe.disconnect()
             flash(f'Office is successfully Added','success')
             
-            return redirect(url_for('addOffice',ad_username = ad_username))
+            return redirect(url_for('Admin_View',ad_username = ad_username))
 
     return render_template("addOffice.html",form = form,ad_username = ad_username)
 
