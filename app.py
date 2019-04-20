@@ -13,7 +13,6 @@ from flask_mail import Mail, Message
 from io import StringIO
 import csv
 import pandas as pd
-from Chart import Chart
 
 qe = QueryEngine()
 qe.setup_default()
@@ -30,7 +29,6 @@ app.config['MAIL_PASSWORD'] = "coscspring2019"
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
-
 
 
 @app.route("/")
@@ -445,65 +443,7 @@ ________________________________________________________________________________
                         STAFF - STAFF - STAFF SECTION HERE. 
 _________________________________________________________________________________________________
 '''
-@app.route("/report1/<st_username>", methods=['GET', 'POST'])
-def Staff_Report1(st_username):
-  charts = []
-  
-  date_cur = date.today()
-  ord_past = date_cur.toordinal() - 7
-  date_past = date.fromordinal(ord_past)
-  
-  qe.connect()
-  query1 = f'''
-    Select
-    count(App_date),A.App_date
-    from
-    appointment as A, log_in as L, staff as S
-    WHERE L.UserName = '{st_username}' AND S.Staff_ID = L.User_ID AND A.App_Location_ID = S.Office_Location_ID AND A.Appt_Status != 'Cancelled' AND ('{str(date_past)}' <= A.App_date AND A.App_date <= '{str(date_cur)}') 
-    GROUP BY
-    App_date
-  '''
-  
-  query2 = f'''
-    Select
-    P.Balance_Due, A.App_date
-    from
-    appointment as A, log_in as L, staff as S, post_appointment as P
-    WHERE L.UserName = '{st_username}' AND S.Staff_ID = L.User_ID AND A.App_Location_ID = S.Office_Location_ID AND A.Appt_Status != 'Cancelled' AND P.Appointment_ID = A.Appt_ID AND ('{str(date_past)}' <= A.App_date AND A.App_date <= '{str(date_cur)}') 
-    GROUP BY
-    App_date
-  '''
-  
-  results1 = qe.do_query(query1)
-  results2 = qe.do_query(query2)
-  qe.disconnect()
-  
-  # Chart 1
-  chartActivity = Chart("Appointments in Past Week", "bar", "Appointment Count")
-  table1 = {}
-  for i in range(-7,1):
-    day = date.today().toordinal() + i
-    table1[date.fromordinal(day)] = 0  
-  for elem in results1:
-    table1[elem[1]] = elem[0]
-  for k,v in table1.items():
-    chartActivity.insert(k, v)
-  
-  charts.append(chartActivity)
-  
-  # Chart 2
-  chartBalance = Chart("Balances Due in Past Week", "bar", "Balance")
-  table2 = {}
-  for i in range(-7,1):
-    day = date.today().toordinal() + i
-    table2[date.fromordinal(day)] = 0  
-  for elem in results2:
-    table2[elem[1]] = elem[0]
-  for k,v in table2.items():
-    chartBalance.insert(k, v)
-  charts.append(chartBalance)
-  
-  return render_template("staffReport1.html", charts_len = len(charts), charts = charts, st_username = st_username)
+
 
 @app.route("/Staff_View/<st_username>", methods=['GET', 'POST'])
 def Staff_View(st_username):
@@ -1718,6 +1658,139 @@ def pickHour(st_username, pt_username, dr_id, apt_loc, apt_date):
   
   return render_template('PickHour.html', st_username = st_username, form = form, titleText = "Choose Hour", no_hour = no_hour, pt_username = pt_username)
 
+
+@app.route("/Staff_View/<st_username>/ClinicReport", methods=['GET','POST'])
+def ClinicReport(st_username):
+    form = ReportForm()
+    qe.connect()
+    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
+    staffID = staffID[0][0]
+    staffLocationID = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
+    staffLocationID = staffLocationID[0][0]
+    staffLocation = qe.do_query(f"SELECT Office_Name FROM office WHERE Office_ID = {staffLocationID};")
+    staffLocation = staffLocation[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    patientCount = qe.do_query(f"SELECT COUNT(DISTINCT Patient_ID) from medical_clinic.appointment where App_Location_ID = {staffLocationID};")
+    patientCount = patientCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    doctorCount = qe.do_query(f"SELECT COUNT(DISTINCT Doctor_ID) from medical_clinic.doctor_office where Office_ID = {staffLocationID};")
+    doctorCount = doctorCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    generalCount = qe.do_query(f"SELECT COUNT(DISTINCT od.Doctor_ID) from medical_clinic.doctor_office as od, medical_clinic.doctor as d where od.Office_ID = {staffLocationID} and d.Specialization_ID = 21 and d.Doctor_ID = od.Doctor_ID;")
+    generalCount = generalCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    specialCount = qe.do_query(f"SELECT COUNT(DISTINCT od.Doctor_ID) from medical_clinic.doctor_office as od, medical_clinic.doctor as d where od.Office_ID = {staffLocationID} and d.Specialization_ID != 21 and d.Doctor_ID = od.Doctor_ID;")
+    specialCount = specialCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    staffCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.staff where Office_Location_ID= {staffLocationID};")
+    staffCount = staffCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    apptCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID};")
+    apptCount = apptCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    apptGeneralCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID} and App_Type = 'General';")
+    apptGeneralCount = apptGeneralCount[0][0]
+    qe.disconnect()
+
+    qe.connect()
+    apptSpecialCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID} and App_Type = 'Specialist';")
+    apptSpecialCount = apptSpecialCount[0][0]
+    qe.disconnect()
+
+    if(form.submit.data):
+        from_date = form.from_date.data
+        to_date = form.to_date.data
+        qe.connect()
+        result = qe.do_query(f"SELECT a.Appt_ID, a.App_Type, a.App_date, s.Last_Name,d.Last_Name,p.First_Name,p.Last_Name FROM medical_clinic.appointment as a, medical_clinic.general_info as p, medical_clinic.general_info as d, general_info AS s where a.App_Location_ID = {staffLocationID} and a.Appt_Status = 'Completed' and a.App_date>= '{str(from_date)}' and a.App_date <= '{str(to_date)}' and a.Confirm_By = s.Hospital_ID and a.With_Doctor = d.Hospital_ID and a.Patient_ID = p.Hospital_ID;")
+        qe.disconnect()
+        numberedData = []
+        for i in range(len(result)):
+            temp = []
+            temp.append(i + 1)
+            temp += result[i]
+            numberedData.append(temp)
+        return render_template('ClinicReport.html', st_username = st_username,form = form,
+                                                    data = numberedData,officeName = staffLocation,
+                                                    patientCount = patientCount,doctorCount = doctorCount,
+                                                    generalCount = generalCount,specialCount = specialCount,
+                                                    staffCount = staffCount, apptCount = apptCount,
+                                                    apptGeneralCount = apptGeneralCount,
+                                                    apptSpecialCount = apptSpecialCount)
+    if(request.method == 'POST'):
+        data = request.form
+        if('selectRow' in data):
+            appt_ID = data['selectRow']
+            return  redirect(url_for('ReportSelect', st_username = st_username,appt_ID = appt_ID))
+
+    return render_template('ClinicReport.html', st_username = st_username,form = form,
+                                    officeName = staffLocation,patientCount = patientCount,
+                                    doctorCount = doctorCount,generalCount = generalCount,
+                                    specialCount = specialCount, staffCount = staffCount,
+                                    apptCount = apptCount, apptGeneralCount = apptGeneralCount,
+                                    apptSpecialCount = apptSpecialCount)
+
+
+@app.route("/Staff_View/<st_username>/ClinicReport/<appt_ID>", methods=['GET','POST'])
+def ReportSelect(st_username,appt_ID):
+    blood_test = True
+    prescript = True
+    post_string = f"SELECT Doctor_Diagnosis, Balance_Due, Blood_Test_ID, Prescription_ID FROM post_appointment WHERE Appointment_ID = {appt_ID};"
+    qe.connect()
+    all_post = qe.do_query(post_string)[0]
+    qe.disconnect()
+
+    if all_post[2] is None:
+        blood_test = False
+    if all_post[3] is None:
+        prescript = False
+
+    blood_result = []
+    if blood_test == True:
+        qe.connect()
+        blood_test_query = f"SELECT Blood_test_id FROM blood_test_result WHERE Appt_ID = {appt_ID};"
+        blood_result = qe.do_query(blood_test_query)[0][0]
+        print(blood_result)
+        qe.disconnect()
+
+    prescript_result = []
+    if prescript == True:
+        qe.connect()
+        prescript_query = f"SELECT Prescription_ID, Drug_Name, Usage_Note, Num_Refill, Patient_ID FROM prescription WHERE Appt_ID = {appt_ID};"
+        prescript_result = qe.do_query(prescript_query)[0]
+        qe.disconnect()
+
+    if (request.method == "POST"):
+      data = request.form
+      if ("download" in data):
+        query_string = f"SELECT L.UserName FROM appointment as A, log_in as L WHERE A.Appt_ID = {appt_ID} AND A.Patient_ID = L.User_ID;"
+        qe.connect()
+        pt_username = qe.do_query(query_string)[0][0]
+        qe.disconnect()
+        return redirect(url_for("BloodTest",bl_id = blood_result, pt_username = pt_username))
+    return render_template('ReportSelect.html', st_username = st_username, 
+                                blood_test = blood_test, prescript = prescript, 
+                                prescript_result = prescript_result, all_post = all_post)
+
+
+
+
+
+
+
 @app.route("/Admin_View/<ad_username>", methods = ['GET','POST'])
 def Admin_View(ad_username):
     qe.connect()
@@ -1736,7 +1809,8 @@ def Admin_View(ad_username):
     return  render_template('Admin_View.html', ad_username = ad_username, first_name = first_name, 
                                         last_name = last_name, phone = phone, dob = dob, email=email)
 
-@app.route("/admin_reg/<ad_username>", methods = ['GET','POST'])
+
+@app.route("/Admin_View/<ad_username>/admin_reg/", methods = ['GET','POST'])
 def admin_reg(ad_username):
     form = AdminRegistration()
     if form.validate_on_submit():
@@ -1793,14 +1867,7 @@ def admin_reg(ad_username):
 
     return render_template("admin_registeration.html",form = form,ad_username = ad_username)
 
-
-
-@app.route("/Admin_View/<ad_username>/GeneralReport",methods = ['GET','POST'])
-def GeneralReport(ad_username):
-    return render_template('GeneralReport.html', ad_username = ad_username)
-
-
-@app.route("/addOffice/<ad_username>",methods = ['GET','POST'])
+@app.route("/Admin_View/<ad_username>/addOffice",methods = ['GET','POST'])
 def addOffice(ad_username):
     form = AddOfficeForm()
     if form.validate_on_submit():
@@ -1835,112 +1902,33 @@ def addOffice(ad_username):
             qe.commit()
             qe.disconnect()
             flash(f'Office is successfully Added','success')
-
             return redirect(url_for('addOffice',ad_username = ad_username))
-
+            
     return render_template("addOffice.html",form = form,ad_username = ad_username)
 
-@app.route("/Staff_View/<st_username>/ClinicReport", methods=['GET','POST'])
-def ClinicReport(st_username):
-    form = ReportForm()
-    qe.connect()
-    staffID = qe.do_query(f"SELECT User_ID FROM log_in WHERE UserName = '{st_username}';")
-    staffID = staffID[0][0]
-    staffLocationID = qe.do_query(f"SELECT Office_Location_ID FROM staff WHERE Staff_ID = {staffID};")
-    staffLocationID = staffLocationID[0][0]
-    staffLocation = qe.do_query(f"SELECT Office_Name FROM office WHERE Office_ID = {staffLocationID};")
-    staffLocation = staffLocation[0][0]
-    qe.disconnect()
-    qe.connect()
-    patientCount = qe.do_query(f"SELECT COUNT(DISTINCT Patient_ID) from medical_clinic.appointment where App_Location_ID = {staffLocationID};")
-    patientCount = patientCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    doctorCount = qe.do_query(f"SELECT COUNT(DISTINCT Doctor_ID) from medical_clinic.doctor_office where Office_ID = {staffLocationID};")
-    doctorCount = doctorCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    generalCount = qe.do_query(f"SELECT COUNT(DISTINCT od.Doctor_ID) from medical_clinic.doctor_office as od, medical_clinic.doctor as d where od.Office_ID = {staffLocationID} and d.Specialization_ID = 21 and d.Doctor_ID = od.Doctor_ID;")
-    generalCount = generalCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    specialCount = qe.do_query(f"SELECT COUNT(DISTINCT od.Doctor_ID) from medical_clinic.doctor_office as od, medical_clinic.doctor as d where od.Office_ID = {staffLocationID} and d.Specialization_ID != 21 and d.Doctor_ID = od.Doctor_ID;")
-    specialCount = specialCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    staffCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.staff where Office_Location_ID= {staffLocationID};")
-    staffCount = staffCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    apptCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID};")
-    apptCount = apptCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    apptGeneralCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID} and App_Type = 'General';")
-    apptGeneralCount = apptGeneralCount[0][0]
-    qe.disconnect()
-    qe.connect()
-    apptSpecialCount = qe.do_query(f"SELECT COUNT(*) FROM medical_clinic.appointment where app_date >= current_date() and Appt_Status = 'Booked' and  App_Location_ID = {staffLocationID} and App_Type = 'Specialist';")
-    apptSpecialCount = apptSpecialCount[0][0]
-    qe.disconnect()
-    if(form.submit.data):
+
+@app.route("/Admin_View/<ad_username>/adminreport",methods = ['GET','POST'])
+def adminreport(ad_username):
+    form = AdminReportForm()
+    if form.validate_on_submit():
+        report_type = form.report_type.data
+        if(report_type =='Doctor'):
+            return redirect(url_for('doctorsummary',ad_username=ad_username))
+
+    return render_template('adminreport.html', ad_username = ad_username,form=form)
+
+
+@app.route("/Admin_View/<ad_username>/doctorsummary",methods = ['GET','POST'])
+def doctorsummary(ad_username):
+    form = DoctorReportForm()
+    if form.validate_on_submit():
+        doctor_name = form.doctor_name.data
         from_date = form.from_date.data
         to_date = form.to_date.data
-        qe.connect()
-        result = qe.do_query(f"SELECT a.Appt_ID, a.App_Type, a.App_date, s.Last_Name,d.Last_Name,p.First_Name,p.Last_Name FROM medical_clinic.appointment as a, medical_clinic.general_info as p, medical_clinic.general_info as d, general_info AS s where a.App_Location_ID = {staffLocationID} and a.Appt_Status = 'Completed' and a.App_date>= '{str(from_date)}' and a.App_date <= '{str(to_date)}' and a.Confirm_By = s.Hospital_ID and a.With_Doctor = d.Hospital_ID and a.Patient_ID = p.Hospital_ID;")
-        qe.disconnect()
-        numberedData = []
-        for i in range(len(result)):
-            temp = []
-            temp.append(i + 1)
-            temp += result[i]
-            numberedData.append(temp)
-        return render_template('ClinicReport.html', st_username = st_username,form = form,data = numberedData,officeName = staffLocation,patientCount = patientCount,doctorCount = doctorCount,generalCount = generalCount,specialCount = specialCount, staffCount = staffCount, apptCount = apptCount, apptGeneralCount = apptGeneralCount,apptSpecialCount = apptSpecialCount)
-    if(request.method == 'POST'):
-        data = request.form
-        if('selectRow' in data):
-            appt_ID = data['selectRow']
-            return  redirect(url_for('ReportSelect', st_username = st_username,appt_ID = appt_ID))
-    return render_template('ClinicReport.html', st_username = st_username,form = form,officeName = staffLocation,patientCount = patientCount,doctorCount = doctorCount,generalCount = generalCount,specialCount = specialCount, staffCount = staffCount, apptCount = apptCount, apptGeneralCount = apptGeneralCount,apptSpecialCount = apptSpecialCount)
 
-@app.route("/Staff_View/<st_username>/ClinicReport/<appt_ID>", methods=['GET','POST'])
-def ReportSelect(st_username,appt_ID):
-    blood_test = True
-    prescript = True
-    post_string = f"SELECT Doctor_Diagnosis, Balance_Due, Blood_Test_ID, Prescription_ID FROM post_appointment WHERE Appointment_ID = {appt_ID};"
-    qe.connect()
-    all_post = qe.do_query(post_string)[0]
-    qe.disconnect()
+    return render_template('doctorsummary.html',ad_username=ad_username,form = form)
 
-    if all_post[2] is None:
-        blood_test = False
-    if all_post[3] is None:
-        prescript = False
 
-    blood_result = []
-    if blood_test == True:
-        qe.connect()
-        blood_test_query = f"SELECT Blood_test_id FROM blood_test_result WHERE Appt_ID = {appt_ID};"
-        blood_result = qe.do_query(blood_test_query)[0][0]
-        print(blood_result)
-        qe.disconnect()
-
-    prescript_result = []
-    if prescript == True:
-        qe.connect()
-        prescript_query = f"SELECT Prescription_ID, Drug_Name, Usage_Note, Num_Refill, Patient_ID FROM prescription WHERE Appt_ID = {appt_ID};"
-        prescript_result = qe.do_query(prescript_query)[0]
-        qe.disconnect()
-
-    if (request.method == "POST"):
-      data = request.form
-      if ("download" in data):
-        query_string = f"SELECT L.UserName FROM appointment as A, log_in as L WHERE A.Appt_ID = {appt_ID} AND A.Patient_ID = L.User_ID;"
-        qe.connect()
-        pt_username = qe.do_query(query_string)[0][0]
-        qe.disconnect()
-        return redirect(url_for("BloodTest",bl_id = blood_result, pt_username = pt_username))
-    return render_template('ReportSelect.html', st_username = st_username, blood_test = blood_test, prescript = prescript, prescript_result = prescript_result, all_post = all_post)
 
 
 if __name__ == '__main__':

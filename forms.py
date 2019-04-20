@@ -364,3 +364,28 @@ class ReportForm(FlaskForm):
     to_date = DateField('To',validators=[DataRequired()],format = '%Y-%m-%d')
     submit = SubmitField("Submit")
 
+class AdminReportForm(FlaskForm):
+    report_type = SelectField('Report Type',
+        choices=[('',''),('Office','Office Summary'),('Doctor','Doctor Report')],
+        validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+class DoctorReportForm(FlaskForm):
+    qe.connect()
+    query_string = f'''SELECT Last_Name 
+                        FROM general_info, doctor
+                        WHERE doctor.Doctor_ID = general_info.Hospital_ID'''
+    result = qe.do_query(query_string)
+    qe.disconnect()
+    doctor_list =[]
+    for elem in result:
+        doc = elem[0]
+        doctor_list.append(doc)
+    report_type = SelectField('Report Type',
+        choices=[('Doctor','Doctor Report')])
+    doctor_name = SelectField('Doctor Name', choices = [(l, l) for l in doctor_list] ,validators=[DataRequired()])
+    from_date = DateField('From',validators=[DataRequired()],format = '%Y-%m-%d')
+    to_date = DateField('To',validators=[DataRequired()],format = '%Y-%m-%d')
+    submit = SubmitField("Submit")
+
+

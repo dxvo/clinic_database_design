@@ -29,7 +29,7 @@
                   <strong>Add Office</strong>
                 </a>
 
-              <a class="nav-item nav-link" href="{{ url_for('GeneralReport',ad_username = ad_username)}}">
+              <a class="nav-item nav-link" href="{{ url_for('adminreport',ad_username = ad_username)}}">
                   <strong>General-Report</strong>
                 </a>
             </div>
@@ -38,7 +38,7 @@
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
               <a class="nav-item nav-link" href="{{url_for('Admin_View',ad_username=ad_username)}}">
-                <strong>Home Profile</strong>
+                <strong>Profile</strong>
               </a>
               <a class="nav-item nav-link" href="{{url_for('login')}}">
                 <strong>Log Out</strong>

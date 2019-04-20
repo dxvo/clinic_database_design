@@ -8,9 +8,9 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='second.css') }}">
 
-    <title>Doctor Profile</title>
+    <title>Admin General Report</title>
 </head>
 <body  style = "background-color:#001B5A;">
     <header class="site-header">
@@ -22,17 +22,23 @@
           </button>
           <div class="collapse navbar-collapse" id="navbarToggle">
             <div class="navbar-nav mr-auto">
-              <a class="nav-item nav-link" href="{{ url_for('doc_today_appointment',dt_username = dt_username)}}">
-                <strong> View Today Appointment</strong>
+              <a class="nav-item nav-link" href="{{ url_for('admin_reg',ad_username = ad_username)}}">
+                <strong>Register Staff/Doctor</strong>
               </a>
-              <a class="nav-item nav-link" href="{{ url_for('specialistApproval',dt_username = dt_username)}}">
-                  <strong>Pending Specialist Approval</strong>
+              <a class="nav-item nav-link" href="{{ url_for('addOffice',ad_username = ad_username)}}">
+                <strong>Add Office</strong>
+              </a>
+
+              <a class="nav-item nav-link" href="{{ url_for('adminreport',ad_username = ad_username)}}">
+                  <strong>General-Report</strong>
                 </a>
             </div>
+
+
             <!-- Navbar Right Side -->
             <div class="navbar-nav">
-              <a class="nav-item nav-link" href="{{url_for('Doctor_View',dt_username = dt_username)}}">
-                <strong>Home Profile</strong>
+              <a class="nav-item nav-link" href="{{url_for('Admin_View',ad_username = ad_username)}}">
+                <strong>Profile</strong>
               </a>
               <a class="nav-item nav-link" href="{{url_for('login')}}">
                 <strong>Log Out</strong>
@@ -44,23 +50,33 @@
       </nav>
     </header>
 
-<main role="main" class="container">
-        <div class="col-lg-5">
-    <div class="card" style="width: 80%; background-color:white;">
-      <img src="../static/Images/profile.jpg" alt="profile_imag" height="120" width="120" >
-      <div class="container" style="padding: 2px 16px;">
-        <h2>{{first_name}} {{last_name}} </h2>
-        <p class="title"> Account Type: Doctor</p>
-        <p>DOB: {{dob}}</p>
-        <p>Email: {{email}}</p>
-        <p>Phone: {{phone}}</p>
-        <!-- <p><button class="button">Edit Profile</button></p> -->
-      </div>
+    <div class="content-section" style="width:80%; margin-left: 140px;">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-2"><strong>Report Selection</strong></legend>
+                <div class="form-row">
+                    <div class="form-group col-md-4">
+                        {{ form.report_type.label(class="form-control-label") }}
+                        {% if form.report_type.errors %}
+                            {{ form.report_type(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.report_type.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.report_type(class="form-control form-control-lg") }}
+                        {% endif %}
+                    </div>
+                    <div class="form-group col-md-3" style="padding-top: 35px; padding-left: 10px;">
+                            {{ form.submit(class="btn btn-outline-info")}}      
+                    </div>      
+                </div>
+            </fieldset>
+        </form>
+
     </div>
-  </div>
-</main>
-
-
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
