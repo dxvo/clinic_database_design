@@ -372,20 +372,44 @@ class AdminReportForm(FlaskForm):
 
 class DoctorReportForm(FlaskForm):
     qe.connect()
-    query_string = f'''SELECT Last_Name 
-                        FROM general_info, doctor
-                        WHERE doctor.Doctor_ID = general_info.Hospital_ID'''
+    query_string = f'''SELECT UserName 
+                        FROM doctor,log_in 
+                        WHERE doctor.Doctor_ID = log_in.User_ID'''
     result = qe.do_query(query_string)
     qe.disconnect()
     doctor_list =[]
+    doctor_list.append(" ")
     for elem in result:
         doc = elem[0]
         doctor_list.append(doc)
+
     report_type = SelectField('Report Type',
         choices=[('Doctor','Doctor Report')])
-    doctor_name = SelectField('Doctor Name', choices = [(l, l) for l in doctor_list] ,validators=[DataRequired()])
+
+    doctor_name = SelectField('Select Doctor', choices = [(l, l) for l in doctor_list] ,validators=[DataRequired()])
     from_date = DateField('From',validators=[DataRequired()],format = '%Y-%m-%d')
     to_date = DateField('To',validators=[DataRequired()],format = '%Y-%m-%d')
     submit = SubmitField("Submit")
 
+
+class OfficeReportForm(FlaskForm):
+    qe.connect()
+    query_string = f'''SELECT Office_Name
+                        FROM office '''
+    result = qe.do_query(query_string)
+    qe.disconnect()
+    office_list =[]
+    office_list.append(" ")
+    office_list.append("All Office")
+
+    for elem in result:
+        off = elem[0]
+        office_list.append(off)
+
+    report_type = SelectField('Report Type',
+        choices=[('Office','Office Summary')],validators=[Optional()])
+    office_name = SelectField('Select Office', choices = [(l, l) for l in office_list],validators=[DataRequired()])
+    from_date = DateField('From',validators=[DataRequired()],format = '%Y-%m-%d')
+    to_date = DateField('To',validators=[DataRequired()],format = '%Y-%m-%d')
+    submit = SubmitField("Submit")
 

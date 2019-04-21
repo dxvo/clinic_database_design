@@ -1427,7 +1427,8 @@ def cancelMissedAppt(st_username):
     staffLocation = staffLocation[0][0]
     qe.disconnect()
     qe.connect()
-    appointmentData = qe.do_query(f"SELECT A.Appt_ID, D.Last_Name,P.Last_Name, A.App_date, Appt_Status, P.Phone_Number, P.Email FROM general_info AS D, general_info AS P,appointment AS A \
+    appointmentData = qe.do_query(f"SELECT A.Appt_ID, D.Last_Name,P.Last_Name, A.App_date, Appt_Status, P.Phone_Number, P.Email \
+                                        FROM general_info AS D, general_info AS P,appointment AS A \
                                         WHERE App_Location_ID = {staffLocation} \
                                         AND D.Hospital_ID = A.With_Doctor AND P.Hospital_ID = A.Patient_ID  \
                                         AND A.App_date = Subdate(CURDATE(),1)\
@@ -1715,7 +1716,12 @@ def ClinicReport(st_username):
         from_date = form.from_date.data
         to_date = form.to_date.data
         qe.connect()
-        result = qe.do_query(f"SELECT a.Appt_ID, a.App_Type, a.App_date, s.Last_Name,d.Last_Name,p.First_Name,p.Last_Name FROM medical_clinic.appointment as a, medical_clinic.general_info as p, medical_clinic.general_info as d, general_info AS s where a.App_Location_ID = {staffLocationID} and a.Appt_Status = 'Completed' and a.App_date>= '{str(from_date)}' and a.App_date <= '{str(to_date)}' and a.Confirm_By = s.Hospital_ID and a.With_Doctor = d.Hospital_ID and a.Patient_ID = p.Hospital_ID;")
+        result = qe.do_query(f"SELECT a.Appt_ID, a.App_Type, a.App_date, s.Last_Name,d.Last_Name,p.First_Name,p.Last_Name \
+                                    FROM medical_clinic.appointment as a, medical_clinic.general_info as p, medical_clinic.general_info as d, general_info AS s \
+                                    WHERE a.App_Location_ID = {staffLocationID} and a.Appt_Status = 'Completed' \
+                                    AND a.App_date>= '{str(from_date)}' AND a.App_date <= '{str(to_date)}' \
+                                    AND a.Confirm_By = s.Hospital_ID \
+                                    AND a.With_Doctor = d.Hospital_ID and a.Patient_ID = p.Hospital_ID;")
         qe.disconnect()
         numberedData = []
         for i in range(len(result)):
@@ -1784,10 +1790,6 @@ def ReportSelect(st_username,appt_ID):
     return render_template('ReportSelect.html', st_username = st_username, 
                                 blood_test = blood_test, prescript = prescript, 
                                 prescript_result = prescript_result, all_post = all_post)
-
-
-
-
 
 
 
@@ -1914,6 +1916,8 @@ def adminreport(ad_username):
         report_type = form.report_type.data
         if(report_type =='Doctor'):
             return redirect(url_for('doctorsummary',ad_username=ad_username))
+        elif(report_type =='Office'):
+            return redirect(url_for('office_summary',ad_username=ad_username))
 
     return render_template('adminreport.html', ad_username = ad_username,form=form)
 
@@ -1925,10 +1929,80 @@ def doctorsummary(ad_username):
         doctor_name = form.doctor_name.data
         from_date = form.from_date.data
         to_date = form.to_date.data
-
     return render_template('doctorsummary.html',ad_username=ad_username,form = form)
 
 
+@app.route("/Admin_View/<ad_username>/office_summary",methods = ['GET','POST'])
+def office_summary(ad_username):
+
+
+    form = OfficeReportForm()
+    if form.validate_on_submit():
+        office_name = form.office_name.data
+        from_date = form.from_date.data
+        to_date = form.to_date.data
+
+        if(office_name != 'All Office'):
+            qe.connect()
+            process_query = f'''SELECT  COUNT(DISTINCT appointment.Appt_ID)  \
+                    FROM appointment, office \
+                    WHERE appointment.Appt_Status IN ('Booked','Process') \
+                    AND office.Office_Name = '{office_name}' \
+                    AND appointment.App_date>= '{str(from_date)}' AND appointment.App_date <= '{str(to_date)}'
+            '''
+            process_appt = qe.do_query(process_query)[0][0]
+            qe.disconnect()
+
+
+#Cancel Appt 
+            qe.connect()
+            cancel_query = f'''SELECT  COUNT(DISTINCT appointment.Appt_ID) \
+                    FROM appointment, office \
+                    WHERE appointment.Appt_Status = 'Cancelled' \
+                    AND office.Office_Name = '{office_name}' \
+                    AND appointment.App_date>= '{str(from_date)}' AND appointment.App_date <= '{str(to_date)}'
+            '''
+            cancelled_appt = qe.do_query(cancel_query)[0][0]
+            qe.disconnect()
+
+# Completed
+            
+            qe.connect()
+            Completed_query = f'''SELECT  COUNT(DISTINCT appointment.Appt_ID) \
+                    FROM appointment, office \
+                    WHERE appointment.Appt_Status = 'Completed' \
+                    AND office.Office_Name = '{office_name}' \
+                    AND appointment.App_date>= '{str(from_date)}' AND appointment.App_date <= '{str(to_date)}'
+            '''
+            Completed_appt = qe.do_query(Completed_query)[0][0]
+            qe.disconnect()
+
+            total_appt = Completed_appt + cancelled_appt + process_appt
+
+#Displaying table
+            qe.connect()
+            query_string = f'''SELECT App_date,Appt_Status, Last_Name \
+                FROM appointment, office,general_info \
+            WHERE  appointment.App_Location_ID = office.Office_ID \
+            AND office.Office_Name = '{office_name}' \
+            AND appointment.With_Doctor = general_info.Hospital_ID \
+            AND appointment.App_date>= '{str(from_date)}' AND appointment.App_date <= '{str(to_date)}' \
+            ORDER BY App_date'''
+
+            result = qe.do_query(query_string)
+            qe.disconnect()
+            office_info = []
+            for i in range(len(result)):
+                temp = []
+                temp.append(i + 1)
+                temp += result[i]
+                office_info.append(temp)
+            return render_template('office_summary.html', ad_username = ad_username,form = form,
+                                        data = office_info,officeName = office_name,
+                                        process_appt = process_appt, cancelled_appt = cancelled_appt,
+                                        Completed_appt = Completed_appt, total_appt = total_appt)
+
+    return render_template('office_summary.html', ad_username = ad_username,form = form)
 
 
 if __name__ == '__main__':
