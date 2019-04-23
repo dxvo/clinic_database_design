@@ -1,7 +1,7 @@
 # GROUP 9 - Clinic Database Project
 
 ### Introduction
-- Website is hosted on Heroku. <h3>[Link to website](https://clinic-database.herokuapp.com/)</h3>
+- Website is hosted on Heroku. <h2>[Link to website](https://clinic-database.herokuapp.com/)</h2>
 - We use MYSQL as our database 
 - Backend: Python Flask framework
 - Frontend: html, css, bootstrap
