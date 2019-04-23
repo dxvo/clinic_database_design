@@ -2021,7 +2021,7 @@ def doctorsummary(ad_username):
 
 
 @app.route("/Admin_View/<ad_username>/office_summary",methods = ['GET','POST'])
-def office_summary(ad_username):    
+def office_summary(ad_username):
 
     form = OfficeReportForm()
     if form.validate_on_submit():

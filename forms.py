@@ -373,7 +373,7 @@ class AdminReportForm(FlaskForm):
 class DoctorReportForm(FlaskForm):
     qe.connect()
     query_string = f'''SELECT UserName 
-                        FROM doctor,log_in 
+                        FROM log_in,doctor
                         WHERE doctor.Doctor_ID = log_in.User_ID'''
     result = qe.do_query(query_string)
     qe.disconnect()
@@ -393,11 +393,13 @@ class DoctorReportForm(FlaskForm):
 
 
 class OfficeReportForm(FlaskForm):
+
     qe.connect()
     query_string = f'''SELECT Office_Name
                         FROM office '''
     result = qe.do_query(query_string)
     qe.disconnect()
+
     office_list =[]
     office_list.append(" ")
     office_list.append("All Office")
@@ -405,6 +407,7 @@ class OfficeReportForm(FlaskForm):
     for elem in result:
         off = elem[0]
         office_list.append(off)
+
 
     report_type = SelectField('Report Type',
         choices=[('Office','Office Summary')],validators=[Optional()])
