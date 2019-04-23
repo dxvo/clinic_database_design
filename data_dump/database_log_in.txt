@@ -1,0 +1,4 @@
+
+host: uh-mysqldbserver.mysql.database.azure.com
+username: devodevo@uh-mysqldbserver
+password: Bank5you
