@@ -1872,8 +1872,10 @@ def admin_reg(ad_username):
 
     return render_template("admin_registeration.html",form = form,ad_username = ad_username)
 
-@app.route("/Admin_View/<ad_username>/addOffice",methods = ['GET','POST'])
+
+@app.route("/Admin_View/<ad_username>/addOffice", methods = ['GET','POST'])
 def addOffice(ad_username):
+
     form = AddOfficeForm()
     if form.validate_on_submit():
         office_name = form.office_name.data
@@ -1988,7 +1990,7 @@ def doctorsummary(ad_username):
         last_name = qe.do_query(name_query)[0][0]
         qe.disconnect()
 
-        print("ello")
+
 
         #Table data
         qe.connect()
@@ -2003,7 +2005,6 @@ def doctorsummary(ad_username):
         '''
 
         result = qe.do_query(data_query)
-        print(result)
         qe.disconnect()
         data = []
 
@@ -2012,7 +2013,6 @@ def doctorsummary(ad_username):
             temp.append(i + 1)
             temp += result[i]
             data.append(temp)
-        print(data)
         return render_template('doctorsummary.html',ad_username=ad_username,form = form,appt_count=appt_count,
                             process_count=process_count,booked_count=booked_count,completed_count=completed_count,data=data,
                             last_name =last_name)
