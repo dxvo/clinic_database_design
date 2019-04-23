@@ -1884,25 +1884,25 @@ def addOffice(ad_username):
         statename = form.statename.data
         zipcode = form.zipcode.data
 
-
         qe.connect()
         state = qe.do_query("select State_ID from state where State_code = '" + statename + "'")
-        qe.disconnect()
         state_id = state[0][0]
+        qe.disconnect()
+
 
         qe.connect()
         check_office_name = qe.do_query("select count(*) from office \
             WHERE Office_Name= '" + office_name + "'")
-        qe.disconnect()
 
         check_office_name = check_office_name[0][0]
+        qe.disconnect()
+
         if (check_office_name == 1):
             flash(f'This Office Name already Exists','danger')
         else:
             qe.connect()
             query_string = (f"INSERT  INTO office(Office_Name, Street_Number, Street_Name, City, State_ID, Zipcode) \
                             VALUE('{office_name}',{streetnumber},'{streetname}','{city}',{state_id},{zipcode});")
-
             qe.do_query(query_string)
             qe.commit()
             qe.disconnect()
