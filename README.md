@@ -1,13 +1,15 @@
 # Clinic Database Design
 
+### Introduction
+- Our database contains 4 different level of log-in: Admin, staff, doctor and patient
+- website is hosted on Heroku. [Link to website](https://clinic-database.herokuapp.com/)
+
 ### Remote database connection via MYSQL workbench  
 - host: uh-mysqldbserver.mysql.database.azure.com
 - username:  devodevo@uh-mysqldbserver
 - password: Bank6you
 
-### Instruction for Testing 
-Database contains 4 different account types: Admin, staff, doctor and patient 
-- Patient can register themselves from the website. 
+### Admin
 - Admin has the ability to add more staff, doctor or clinic location into database. 
 - ADMIN log in information: 
         - admin username: admin
@@ -21,8 +23,8 @@ Database contains 4 different account types: Admin, staff, doctor and patient
 - Patient needs approval from primary physician to make specialist appointment 
 
 ### Staff functionality 
-- Staff can check in patient during appointment 
-- staff can update lab result post appointment 
+- Staff can check in patient during appointment
+- Staff can check in Patients when they come. After checking in, staff has to insert(or update if not exist) health profile of patient. After patients meet doctor, staff is supposed to insert doctor diagnosis, prescription(if needed), and blood test(if needed) (staff can do this anytime depends of request from doctor). 
 - staff can access report to view information about a particular office that he/she works for. 
 - staff can also look up a particular past appointment
 - staff can also make appointment for patient over the phone 
