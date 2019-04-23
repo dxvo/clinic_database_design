@@ -1911,7 +1911,7 @@ def addOffice(ad_username):
             flash(f'Office is successfully Added','success')
             return redirect(url_for('addOffice',ad_username = ad_username))
             
-    return render_template("addOffice.html",form = form,ad_username = ad_username)
+    return render_template("addoffice.html",form = form,ad_username = ad_username)
 
 
 @app.route("/Admin_View/<ad_username>/adminreport",methods = ['GET','POST'])
