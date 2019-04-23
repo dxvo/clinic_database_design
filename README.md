@@ -2,7 +2,7 @@
 
 ### Introduction
 - Website is hosted on Heroku. <h3>[Link to website](https://clinic-database.herokuapp.com/)</h3>
-- We use MYSQL as outdatabase 
+- We use MYSQL as our database 
 - Backend: Python Flask framework
 - Frontend: html, css, bootstrap
 - Our database contains 4 different level of log-in: Admin, staff, doctor and patient
