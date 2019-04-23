@@ -1,13 +1,29 @@
 # Clinic Database Design
 
 ### Introduction
+- We use MYSQL as outdatabase 
+- Backend: Python Flask framework
+- Frontend: html, css, bootstrap
 - Our database contains 4 different level of log-in: Admin, staff, doctor and patient
 - website is hosted on Heroku. [Link to website](https://clinic-database.herokuapp.com/)
 
-### Remote database connection via MYSQL workbench  
+### Remote database connection to MYSQL   
 - host: uh-mysqldbserver.mysql.database.azure.com
 - username:  devodevo@uh-mysqldbserver
 - password: Bank6you
+
+### Log in infomation for testing
+- There are some accounts already register in the database. All accounts are registered with `password` as password. 
+- Example for patient 
+    - username: pat1 
+    - password: password 
+- Log in for doctor 
+    - username: doc1 
+    - password: password
+- log in for staff
+    - username: staff1
+    - password: password
+    
 
 ### Admin
 - Admin has the ability to add more staff, doctor or clinic location into database. 
@@ -41,16 +57,5 @@
 - 1 report can be viewed from staff account log in. 
 
 
-### Log in infomation 
-- There are some accounts already register in the database. All accounts are registered with `password` as password. 
-- Example for patient 
-    - username: pat1 
-    - password: password 
-- Log in for doctor 
-    - username: doc1 
-    - password: password
-- log in for staff
-    - username: staff1
-    - password: password
 
 
