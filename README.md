@@ -1,11 +1,11 @@
-# Clinic Database Design
+# GROUP 9 - Clinic Database Project
 
 ### Introduction
+- Website is hosted on Heroku. <h3>[Link to website](https://clinic-database.herokuapp.com/)</h3>
 - We use MYSQL as outdatabase 
 - Backend: Python Flask framework
 - Frontend: html, css, bootstrap
 - Our database contains 4 different level of log-in: Admin, staff, doctor and patient
-- website is hosted on Heroku. [Link to website](https://clinic-database.herokuapp.com/)
 
 ### Remote database connection to MYSQL   
 - host: uh-mysqldbserver.mysql.database.azure.com
