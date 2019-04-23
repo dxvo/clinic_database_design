@@ -16,7 +16,7 @@ class QueryEngine:
   def setup_default(self):
     self.host = "uh-mysqldbserver.mysql.database.azure.com"
     self.user = "devodevo@uh-mysqldbserver"
-    self.password = "Bank5you"
+    self.password = "Bank6you"
     self.database = "medical_clinic"
   
   def connect(self):
