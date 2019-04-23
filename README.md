@@ -1,6 +1,6 @@
 # Clinic Database Design
 
-### Database Remote connection 
+### Remote database connection via MYSQL workbench  
 - host: uh-mysqldbserver.mysql.database.azure.com
 - username:  devodevo@uh-mysqldbserver
 - password: Bank6you
@@ -25,13 +25,13 @@ Database contains 4 different account types: Admin, staff, doctor and patient
 ### Log in infomation 
 - There are some accounts already register in the database. All accounts are registered with `password` as password. 
 - Example for patient 
-        * username: pat1 
-        * password: password 
+        - username: pat1 
+        - password: password 
 - Log in for doctor 
-        * username: doc1 
-        * password: password
+        - username: doc1 
+        - password: password
 - log in for staff
-        * username: staff1
-        * password: password
+        - username: staff1
+        - password: password
 
 
