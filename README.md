@@ -13,8 +13,25 @@ Database contains 4 different account types: Admin, staff, doctor and patient
         - admin username: admin
         - admin password: password
 
+### Patient Functionality
+- Patient can register a new account from website. 
+- patient can view info their past appointment (such as diagnosis,..)
+- patient  can schedule an appointment or make edit 
+- patient can order prescription 
+- Patient needs approval from primary physician to make specialist appointment 
+
+### Staff functionality 
+- Staff can check in patient during appointment 
+- staff can update lab result post appointment 
+- staff can access report to view information about a particular office that he/she works for. 
+- staff can also look up a particular past appointment
+- staff can also make appointment for patient over the phone 
+
 ### TRIGGER
 - We have total 3 triggers: 2 triggers under appointment table and another trigger under specialistrequest
+- After Patient makes appointment with a Specialist, he/she will lose the approval from his/her primary physician (Approval Status in Patient will be False).
+- After Staff checks in an appointment, that appointment status will be changed to Process.
+- Like mentioned above the final trigger is like the first but reversed. So when a patient requests for a specialist approval the doctor can either deny or approve it. If the doctor approves it the trigger is triggered to set the patients permission to schedule with a specialist to true.
 
 ### REPORTS 
 - WE have total 3 reports 
