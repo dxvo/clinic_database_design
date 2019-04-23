@@ -384,7 +384,7 @@ class DoctorReportForm(FlaskForm):
         doctor_list.append(doc)
 
     report_type = SelectField('Report Type',
-        choices=[('Doctor','Doctor Report')])
+        choices=[('Doctor','Doctor Report')],validators=[Optional()])
 
     doctor_name = SelectField('Select Doctor', choices = [(l, l) for l in doctor_list] ,validators=[DataRequired()])
     from_date = DateField('From',validators=[DataRequired()],format = '%Y-%m-%d')

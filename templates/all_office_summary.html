@@ -69,17 +69,17 @@
             <fieldset class="form-group">
                 <div class="form-row">
                     <div class="form-group col-md-3">
-                        {{ form.doctor_name.label(class="form-control-label") }}
+                        {{ form.office_name.label(class="form-control-label") }}
 
-                        {% if form.doctor_name.errors %}
-                            {{ form.doctor_name(class="form-control form-control-lg is-invalid") }}
+                        {% if form.office_name.errors %}
+                            {{ form.office_name(class="form-control form-control-lg is-invalid") }}
                             <div class="invalid-feedback">
-                                {% for error in form.doctor_name.errors %}
+                                {% for error in form.office_name.errors %}
                                     <span>{{ error }}</span>
                                 {% endfor %}
                             </div>
                         {% else %}
-                            {{ form.doctor_name(class="form-control form-control-lg") }}
+                            {{ form.office_name(class="form-control form-control-lg") }}
                         {% endif %}
                     </div>
 
@@ -117,39 +117,43 @@
             </fieldset>
         </form>
 
-        <h1 style="text-align: center; color: blue">Dr {{last_name}} Report</h1>
+        <h4 style="text-align: center; color: blue"><u>All Clinic Office Report</u></h4>
         <hr>
-        <strong style="font-size: 20px; padding-left: 130px;">Total Appointment: {{appt_count}}</strong><br>
-        <em style="padding-left: 165px; font-size: 16px;">In Progress: {{process_count}} </em><br>
-        <em style="padding-left: 165px;">Booked: {{booked_count}}  </em><br>
-        <em style="padding-left: 165px;">Completed: {{completed_count}}  </em><br>
-        <hr>
-        
-        <table class="table table-dark table-striped table-hover table-bordered text-white">
-          <thead style="text-align: center;">
-            <th>Index</th>
-            <th>Dr Last Name</th>
-            <th>Appt Type</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Office Name</th>
-            <th>Office State</th>
-          </thead>
-
+        <table class="table table-striped table-hover table-bordered text-black" style="width:55%; margin-left: 200px;">
           <tbody style="text-align: center;">
-            {% for row in data %}
-              <tr>
-                {% for item in row %}
-                      <td>
-                        {{item}}
-                      </td>
-                {% endfor %}
-              </tr>
-            {% endfor %}
+            <tr>
+                <td>
+                    <strong>Total Number of Clinic</strong>
+                </td>
+                <td>
+                    {{office_count}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                   <strong>Total Number of Doctor</strong>
+                </td>
+                <td>
+                    {{doctor_count}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                   <strong>Total Number of Appointment</strong>
+                </td>
+                <td>
+                    {{appt_count}}
+                </td>
+            </tr>
           </tbody>
         </table>
         </main>
     </div>
+
+    <!--     <em style="padding-left: 165px; font-size: 16px;">In Progress(Booked+Process): {{process_appt}} </em><br>
+        <em style="padding-left: 165px;">Competed: {{Completed_appt}}  </em><br>
+        <em style="padding-left: 165px;">Cancelled: {{cancelled_appt}}  </em><br>
+        <hr> -->
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
