@@ -1,7 +1,7 @@
 amqp==2.4.2
 billiard==3.5.0.5
 blinker==1.4
-celery==4.2.2
+celery==5.2.2
 certifi==2019.3.9
 Click==7.0
 Flask==1.0.2
